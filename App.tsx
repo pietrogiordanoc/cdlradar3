@@ -53,6 +53,29 @@ const App: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
+  const playManualSound = (type: 'entry' | 'exit') => {
+    try {
+      const vol = volume;
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.type = 'sine';
+      if (type === 'entry') {
+        oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+        oscillator.frequency.linearRampToValueAtTime(880, audioCtx.currentTime + 0.2);
+      } else {
+        oscillator.frequency.setValueAtTime(660, audioCtx.currentTime);
+        oscillator.frequency.linearRampToValueAtTime(330, audioCtx.currentTime + 0.3);
+      }
+      gainNode.gain.setValueAtTime(vol * 0.15, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.5);
+    } catch (e) {}
+  };
+
   const filteredInstruments = useMemo(() => {
     let items = ALL_INSTRUMENTS;
     if (filter !== 'all') items = items.filter(i => i.type === filter);
@@ -147,14 +170,24 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-3 bg-white/5 p-2 rounded-xl border border-white/10">
-              <button 
-                onClick={() => setIsTestActive(!isTestActive)}
-                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${isTestActive ? 'bg-amber-500 text-black shadow-[0_0_10px_rgba(245,158,11,0.4)]' : 'bg-neutral-800 text-neutral-500 hover:text-white'}`}
-              >
-                Test Mode
-              </button>
-              <div className="h-4 w-px bg-white/10"></div>
+            <div className="flex items-center space-x-4 bg-white/5 p-2 px-3 rounded-xl border border-white/10">
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => playManualSound('entry')}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase border border-emerald-500/20 hover:bg-emerald-500/20 transition-all"
+                  title="Test Entry Sound"
+                >
+                  Entry
+                </button>
+                <button 
+                  onClick={() => playManualSound('exit')}
+                  className="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-500 text-[9px] font-black uppercase border border-rose-500/20 hover:bg-rose-500/20 transition-all"
+                  title="Test Exit Sound"
+                >
+                  Exit
+                </button>
+              </div>
+              <div className="h-6 w-px bg-white/10"></div>
               <div className="flex items-center space-x-2">
                 <svg className="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
@@ -187,29 +220,14 @@ const App: React.FC = () => {
 
       <main className="max-w-[1360px] mx-auto px-8 mt-10">
         <div className="grid grid-cols-1 gap-4">
-          {isTestActive && (
-            <div className="mb-6 space-y-2">
-              <div className="text-[10px] font-black uppercase tracking-widest text-amber-500 flex items-center gap-2 px-2">
-                <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-                Demo Simulation (3s)
-              </div>
-              <InstrumentRow
-                instrument={{ id: 'DEMO', symbol: 'DEMO/USD', name: 'Simulation Row', type: 'forex' }}
-                isConnected={true}
-                onToggleConnect={() => {}}
-                globalRefreshTrigger={refreshTrigger}
-                strategy={STRATEGIES[0]}
-                isTestMode={true}
-              />
-              <div className="h-px bg-white/5 my-4"></div>
-            </div>
-          )}
-
           <div className="flex items-center justify-between px-6 py-3 bg-white/[0.02] rounded-xl border border-white/5 mb-4 text-[10px] font-black uppercase tracking-widest text-neutral-600">
             <div className="w-24 text-center">Status</div>
             <div className="w-1/4 cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('symbol')}>Instrument</div>
             <div className="w-1/3 text-center">MTF Alignment (4H - 1H - 15M - 5M)</div>
-            <div className="w-1/6 text-center cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('score')}>Score</div>
+            <div className="w-1/6 flex flex-col items-center">
+              <span className="cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('score')}>Score</span>
+              <span className="text-[10px] text-emerald-500/60 lowercase font-medium tracking-normal mt-0.5">85/100 optima para entrar</span>
+            </div>
             <div className="w-40 text-center">Session</div>
             <div className="min-w-[150px] flex flex-col items-center">
               <span className="cursor-pointer hover:text-white transition-colors mb-2" onClick={() => requestSort('action')}>Action</span>
