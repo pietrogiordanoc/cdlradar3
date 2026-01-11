@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { ALL_INSTRUMENTS, REFRESH_INTERVAL_MS } from './constants.tsx';
 import { STRATEGIES } from './utils/tradingLogic';
@@ -8,10 +7,12 @@ import TimerDonut from './components/TimerDonut';
 import TradingViewModal from './components/TradingViewModal';
 
 type SortConfig = { key: 'symbol' | 'action' | 'signal' | 'price' | 'score'; direction: 'asc' | 'desc' } | null;
+type ActionFilter = 'all' | 'entrar' | 'salir' | 'esperar';
 
 const App: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [filter, setFilter] = useState<'all' | 'forex' | 'indices' | 'stocks' | 'commodities' | 'crypto'>('all');
+  const [actionFilter, setActionFilter] = useState<ActionFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
   const [volume, setVolume] = useState(0.5);
@@ -50,6 +51,17 @@ const App: React.FC = () => {
     
     const currentAnalyses = analysesRef.current;
 
+    // Filtro por acción
+    if (actionFilter !== 'all') {
+      items = items.filter(i => {
+        const analysis = currentAnalyses[i.id];
+        if (actionFilter === 'entrar') return analysis?.action === ActionType.ENTRAR_AHORA;
+        if (actionFilter === 'salir') return analysis?.action === ActionType.SALIR;
+        if (actionFilter === 'esperar') return analysis?.action === ActionType.ESPERAR || analysis?.action === ActionType.NADA;
+        return true;
+      });
+    }
+
     return [...items].sort((a, b) => {
       const analysisA = currentAnalyses[a.id];
       const analysisB = currentAnalyses[b.id];
@@ -75,7 +87,7 @@ const App: React.FC = () => {
       
       return (analysisB?.powerScore || 0) - (analysisA?.powerScore || 0);
     });
-  }, [filter, searchQuery, sortConfig, refreshTrigger]);
+  }, [filter, actionFilter, searchQuery, sortConfig, refreshTrigger]);
 
   return (
     <div className="min-h-screen pb-24 bg-[#050505] text-white selection:bg-emerald-500/30">
@@ -96,19 +108,21 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {(['all', 'forex', 'indices', 'stocks', 'commodities', 'crypto'] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 border
-                  ${filter === f 
-                    ? 'bg-emerald-500 border-emerald-400 text-black shadow-[0_0_15px_rgba(16,185,129,0.3)]' 
-                    : 'bg-white/5 border-white/5 text-neutral-500 hover:text-white hover:bg-white/10'}`}
-              >
-                {f}
-              </button>
-            ))}
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {(['all', 'forex', 'indices', 'stocks', 'commodities', 'crypto'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 border
+                    ${filter === f 
+                      ? 'bg-emerald-500 border-emerald-400 text-black shadow-[0_0_15px_rgba(16,185,129,0.3)]' 
+                      : 'bg-white/5 border-white/5 text-neutral-500 hover:text-white hover:bg-white/10'}`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center space-x-6">
@@ -137,7 +151,27 @@ const App: React.FC = () => {
             <div className="w-1/4 cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('symbol')}>Instrument</div>
             <div className="w-1/3 text-center">MTF Alignment (4H - 1H - 15M - 5M)</div>
             <div className="w-1/6 text-center cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('score')}>Score</div>
-            <div className="min-w-[150px] text-center cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('action')}>Action</div>
+            <div className="min-w-[150px] flex flex-col items-center">
+              <span className="cursor-pointer hover:text-white transition-colors mb-2" onClick={() => requestSort('action')}>Action</span>
+              <div className="flex items-center justify-center gap-1 bg-white/5 p-0.5 rounded-lg border border-white/5 scale-90">
+                <button 
+                  onClick={() => setActionFilter('all')}
+                  className={`px-2 py-0.5 rounded text-[7px] font-bold uppercase tracking-widest transition-all ${actionFilter === 'all' ? 'bg-white/10 text-white' : 'text-neutral-500'}`}
+                >All</button>
+                <button 
+                  onClick={() => setActionFilter('entrar')}
+                  className={`px-2 py-0.5 rounded text-[7px] font-bold uppercase tracking-widest transition-all ${actionFilter === 'entrar' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-neutral-500'}`}
+                >Entrar</button>
+                <button 
+                  onClick={() => setActionFilter('salir')}
+                  className={`px-2 py-0.5 rounded text-[7px] font-bold uppercase tracking-widest transition-all ${actionFilter === 'salir' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-neutral-500'}`}
+                >Salir</button>
+                <button 
+                  onClick={() => setActionFilter('esperar')}
+                  className={`px-2 py-0.5 rounded text-[7px] font-bold uppercase tracking-widest transition-all ${actionFilter === 'esperar' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-neutral-500'}`}
+                >Standby</button>
+              </div>
+            </div>
             <div className="w-10"></div>
           </div>
           
@@ -154,6 +188,11 @@ const App: React.FC = () => {
               onOpenChart={setSelectedChartSymbol}
             />
           ))}
+          {filteredInstruments.length === 0 && (
+            <div className="py-20 text-center text-neutral-600 font-bold uppercase tracking-widest border border-dashed border-white/5 rounded-3xl">
+              No instruments found with current filters
+            </div>
+          )}
         </div>
       </main>
 

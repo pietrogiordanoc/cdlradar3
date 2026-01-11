@@ -194,13 +194,20 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
 
       <div className="flex flex-col w-full md:w-1/4">
         <div className="flex items-center space-x-2">
+          <div className="flex flex-col">
+            <span className="font-mono font-bold text-white text-lg tracking-tight">{instrument.symbol}</span>
+            <span className="text-[9px] text-neutral-500 font-medium leading-none mt-0.5">{instrument.name}</span>
+          </div>
           <button 
             onClick={() => onOpenChart?.(instrument.symbol)}
-            className="font-mono font-bold text-white text-lg tracking-tight hover:text-emerald-400 transition-colors cursor-pointer text-left"
+            className="p-1.5 hover:bg-emerald-500/20 rounded-lg transition-colors group cursor-pointer"
+            title="Abrir Gráfico"
           >
-            {instrument.symbol}
+            <svg className="w-4 h-4 text-neutral-500 group-hover:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+            </svg>
           </button>
-          {currentPrice > 0 && <span className="text-[11px] font-mono text-neutral-500">${currentPrice.toLocaleString()}</span>}
+          {currentPrice > 0 && <span className="text-[13px] font-mono text-white/90 font-bold ml-auto">${currentPrice.toLocaleString()}</span>}
         </div>
         <span className="text-[8px] text-neutral-600 font-black uppercase tracking-widest">{instrument.type}</span>
       </div>
