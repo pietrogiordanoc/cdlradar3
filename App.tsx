@@ -7,7 +7,7 @@ import InstrumentRow from './components/InstrumentRow';
 import TimerDonut from './components/TimerDonut';
 import TradingViewModal from './components/TradingViewModal';
 
-type SortConfig = { key: 'symbol' | 'action' | 'signal' | 'price'; direction: 'asc' | 'desc' } | null;
+type SortConfig = { key: 'symbol' | 'action' | 'signal' | 'price' | 'score'; direction: 'asc' | 'desc' } | null;
 
 const App: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -55,12 +55,12 @@ const App: React.FC = () => {
   const handleAnalysisUpdate = useCallback((id: string, data: MultiTimeframeAnalysis | null) => {
     if (!data) return;
     analysesRef.current[id] = data;
-    if (sortConfig && (sortConfig.key === 'price' || sortConfig.key === 'action')) {
+    if (sortConfig && (sortConfig.key === 'price' || sortConfig.key === 'action' || sortConfig.key === 'score')) {
       forceUpdate(t => t + 1);
     }
   }, [sortConfig]);
 
-  const requestSort = (key: 'symbol' | 'action' | 'signal' | 'price') => {
+  const requestSort = (key: 'symbol' | 'action' | 'signal' | 'price' | 'score') => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
@@ -79,6 +79,7 @@ const App: React.FC = () => {
         let valA: any, valB: any;
         if (key === 'symbol') { valA = a.symbol; valB = b.symbol; }
         else if (key === 'price') { valA = currentAnalyses[a.id]?.price || 0; valB = currentAnalyses[b.id]?.price || 0; }
+        else if (key === 'score') { valA = currentAnalyses[a.id]?.powerScore || 0; valB = currentAnalyses[b.id]?.powerScore || 0; }
         else if (key === 'action') { valA = currentAnalyses[a.id]?.action || ''; valB = currentAnalyses[b.id]?.action || ''; }
         else if (key === 'signal') { valA = currentAnalyses[a.id]?.mainSignal || ''; valB = currentAnalyses[b.id]?.mainSignal || ''; }
         if (valA < valB) return direction === 'asc' ? -1 : 1;
@@ -181,8 +182,8 @@ const App: React.FC = () => {
            <div className="w-24 text-center">STATUS</div>
            <div className="w-1/4 cursor-pointer hover:text-emerald-500 transition-colors" onClick={() => requestSort('symbol')}>Instrumento {sortConfig?.key === 'symbol' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</div>
            <div className="w-1/3 text-center">MTF Context Alignment</div>
-           <div className="w-1/6 text-center">Power Score</div>
-           <div className="w-1/5 text-center cursor-pointer hover:text-emerald-500 transition-colors" onClick={() => requestSort('action')}>Recommendation</div>
+           <div className="w-1/6 text-center cursor-pointer hover:text-emerald-500 transition-colors" onClick={() => requestSort('score')}>Power Score {sortConfig?.key === 'score' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</div>
+           <div className="w-1/5 text-center cursor-pointer hover:text-emerald-500 transition-colors" onClick={() => requestSort('action')}>Recommendation {sortConfig?.key === 'action' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</div>
            <div className="w-10 text-center">SAVE</div>
         </div>
 

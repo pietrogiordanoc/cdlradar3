@@ -1,18 +1,25 @@
 
-import { Candlestick, SignalType, ActionType, Timeframe } from '../types';
+import { Candlestick, SignalType, ActionType, Timeframe, Instrument } from '../types';
 import { calculateSMA, calculateATR, calculateEMA, calculateSlope } from './indicators';
+import { isMarketOpen } from '../services/twelveDataService';
 
 export const validateV4Signal = (
   data: Partial<Record<Timeframe, Candlestick[]>>,
   strategySignal5m: SignalType,
   signalsMTF: Record<Timeframe, SignalType>,
-  isPrecisionMode: boolean
+  isPrecisionMode: boolean,
+  instrument?: Instrument
 ): { action: ActionType; score: number } => {
   const h4 = signalsMTF['4h'];
   const h1 = signalsMTF['1h'];
   const m15 = signalsMTF['15min'];
   const m5 = strategySignal5m;
   const candles5m = data['5min'] || [];
+
+  // Validar si el mercado está abierto
+  if (instrument && !isMarketOpen(instrument.type, instrument.symbol)) {
+    return { action: ActionType.MERCADO_CERRADO, score: 0 };
+  }
 
   if (m5 === SignalType.NEUTRAL || candles5m.length < 30) {
     return { action: ActionType.NADA, score: 0 };
@@ -38,7 +45,7 @@ export const validateV4Signal = (
   }
 
   // 3. Filtro Volatilidad ATR (+20 puntos)
-  const atr = calculateATR(candles5m, 14);
+  const ATR_PERIOD = 14;
   const trs = candles5m.map((c, i) => {
     if (i === 0) return c.high - c.low;
     const hl = c.high - c.low;
@@ -46,9 +53,10 @@ export const validateV4Signal = (
     const lpc = Math.abs(c.low - candles5m[i-1].close);
     return Math.max(hl, hpc, lpc);
   });
+  const currentAtr = calculateATR(candles5m, ATR_PERIOD);
   const avgAtr = calculateSMA(trs, 20);
   
-  if (atr > avgAtr) {
+  if (currentAtr > avgAtr) {
     score += 20;
   }
 

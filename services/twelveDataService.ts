@@ -57,7 +57,25 @@ export const resampleCandles = (candles: Candlestick[], factor: number): Candles
 
 export const isMarketOpen = (type: string, symbol: string): boolean => {
   if (type === 'crypto') return true;
+  
   const now = new Date();
-  const day = now.getUTCDay();
+  const day = now.getUTCDay(); // 0 = Sunday, 6 = Saturday
+  const hour = now.getUTCHours();
+  const minute = now.getUTCMinutes();
+  
+  // Forex: Domingo 22:00 UTC a Viernes 22:00 UTC
+  if (type === 'forex') {
+    if (day === 0) return hour >= 22;
+    if (day === 5) return hour < 22;
+    return day >= 1 && day <= 4;
+  }
+  
+  // Indices y Acciones (Aproximación US Market 14:30 - 21:00 UTC)
+  if (type === 'indices' || type === 'stocks') {
+    if (day === 0 || day === 6) return false;
+    const timeInMinutes = hour * 60 + minute;
+    return timeInMinutes >= 870 && timeInMinutes <= 1260; // 14:30 a 21:00 UTC
+  }
+  
   return day >= 1 && day <= 5;
 };
