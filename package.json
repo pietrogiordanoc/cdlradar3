@@ -11,14 +11,14 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "lucide-react": "^0.300.0"
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "lucide-react": "0.300.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@types/react": "18.2.0",
+    "@types/react-dom": "18.2.0",
     "typescript": "^5.0.0",
     "vite": "^5.0.0",
     "@vitejs/plugin-react": "^4.2.0",
