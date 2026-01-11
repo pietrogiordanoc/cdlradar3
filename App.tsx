@@ -206,10 +206,11 @@ const App: React.FC = () => {
           )}
 
           <div className="flex items-center justify-between px-6 py-3 bg-white/[0.02] rounded-xl border border-white/5 mb-4 text-[10px] font-black uppercase tracking-widest text-neutral-600">
-            <div className="w-24 text-center">Market</div>
+            <div className="w-24 text-center">Status</div>
             <div className="w-1/4 cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('symbol')}>Instrument</div>
             <div className="w-1/3 text-center">MTF Alignment (4H - 1H - 15M - 5M)</div>
             <div className="w-1/6 text-center cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('score')}>Score</div>
+            <div className="w-40 text-center">Session</div>
             <div className="min-w-[150px] flex flex-col items-center">
               <span className="cursor-pointer hover:text-white transition-colors mb-2" onClick={() => requestSort('action')}>Action</span>
               <div className="flex items-center justify-center gap-1 bg-white/5 p-0.5 rounded-lg border border-white/5 scale-90">

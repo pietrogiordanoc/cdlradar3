@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Instrument, MultiTimeframeAnalysis, SignalType, ActionType, Timeframe, Strategy, Candlestick } from '../types';
-import { fetchTimeSeries, PriceStore, resampleCandles, fetchCryptoPrice } from '../services/twelveDataService';
+import { fetchTimeSeries, PriceStore, resampleCandles, fetchCryptoPrice, isMarketOpen } from '../services/twelveDataService';
 
 const GlobalAnalysisCache: Record<string, { analysis: MultiTimeframeAnalysis, trigger: number }> = {};
 
@@ -187,6 +187,8 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
     return 'bg-neutral-800';
   };
 
+  const marketOpen = isMarketOpen(instrument.type, instrument.symbol);
+
   return (
     <div className={`flex flex-col md:flex-row items-center justify-between p-3 rounded-2xl border transition-all duration-500 
       ${isBookmarked ? 'bg-emerald-500/10 border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.05)]' : 'bg-white/[0.03] border-white/5'}
@@ -196,7 +198,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         <div 
           className="h-7 w-12 rounded-full transition-all duration-300 flex items-center p-1 bg-neutral-800 border border-white/5"
         >
-          <div className={`h-5 w-5 rounded-full shadow-lg transition-all duration-500 ${isLoading ? 'bg-amber-500 animate-pulse' : (analysis?.action === ActionType.MERCADO_CERRADO ? 'bg-neutral-600 translate-x-0' : 'bg-emerald-500 translate-x-5 shadow-[0_0_10px_rgba(16,185,129,0.5)]')}`} />
+          <div className={`h-5 w-5 rounded-full shadow-lg transition-all duration-500 ${isLoading ? 'bg-amber-500 animate-pulse' : (!marketOpen ? 'bg-neutral-600 translate-x-0' : 'bg-emerald-500 translate-x-5 shadow-[0_0_10px_rgba(16,185,129,0.5)]')}`} />
         </div>
       </div>
 
@@ -237,10 +239,10 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
       </div>
 
       <div className="flex flex-col items-center justify-center w-40 text-center">
-        {analysis?.action === ActionType.MERCADO_CERRADO ? (
-          <span className="text-[11px] font-black uppercase text-neutral-600 tracking-wider">MERCADO CERRADO</span>
+        {marketOpen ? (
+          <span className="text-[11px] font-black uppercase text-emerald-500 tracking-wider drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]">ABIERTO</span>
         ) : (
-          <span className="text-[11px] font-black uppercase text-emerald-400 tracking-wider drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]">MERCADO ABIERTO</span>
+          <span className="text-[11px] font-black uppercase text-neutral-600 tracking-wider">CERRADO</span>
         )}
       </div>
 
