@@ -26,6 +26,15 @@ const App: React.FC = () => {
     localStorage.setItem('alertVolume', volume.toString());
   }, [volume]);
 
+  useEffect(() => {
+    if (isTestActive) {
+      const timer = setTimeout(() => {
+        setIsTestActive(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isTestActive]);
+
   const handleRefreshComplete = useCallback(() => {
     setRefreshTrigger(t => t + 1);
   }, []);
@@ -66,24 +75,36 @@ const App: React.FC = () => {
       const analysisA = currentAnalyses[a.id];
       const analysisB = currentAnalyses[b.id];
 
-      const isEntryA = analysisA?.action === ActionType.ENTRAR_AHORA;
-      const isEntryB = analysisB?.action === ActionType.ENTRAR_AHORA;
-      
-      if (isEntryA && !isEntryB) return -1;
-      if (!isEntryA && isEntryB) return 1;
-
       if (sortConfig) {
         const { key, direction } = sortConfig;
         let valA: any, valB: any;
-        if (key === 'symbol') { valA = a.symbol; valB = b.symbol; }
+        
+        if (key === 'action') {
+          // Lógica cíclica solicitada: Standby -> Entrar -> Salir
+          const actionOrder = {
+            [ActionType.ESPERAR]: 1,
+            [ActionType.NADA]: 1,
+            [ActionType.ENTRAR_AHORA]: 2,
+            [ActionType.SALIR]: 3,
+            [ActionType.MERCADO_CERRADO]: 4,
+            [ActionType.NOTICIA]: 5
+          };
+          valA = actionOrder[analysisA?.action || ActionType.NADA];
+          valB = actionOrder[analysisB?.action || ActionType.NADA];
+        } else if (key === 'symbol') { valA = a.symbol; valB = b.symbol; }
         else if (key === 'price') { valA = analysisA?.price || 0; valB = analysisB?.price || 0; }
         else if (key === 'score') { valA = analysisA?.powerScore || 0; valB = analysisB?.powerScore || 0; }
-        else if (key === 'action') { valA = analysisA?.action || ''; valB = analysisB?.action || ''; }
         else if (key === 'signal') { valA = analysisA?.mainSignal || ''; valB = analysisB?.mainSignal || ''; }
         
         if (valA < valB) return direction === 'asc' ? -1 : 1;
         if (valA > valB) return direction === 'asc' ? 1 : -1;
       }
+
+      // Default sort by score and entries
+      const isEntryA = analysisA?.action === ActionType.ENTRAR_AHORA;
+      const isEntryB = analysisB?.action === ActionType.ENTRAR_AHORA;
+      if (isEntryA && !isEntryB) return -1;
+      if (!isEntryA && isEntryB) return 1;
       
       return (analysisB?.powerScore || 0) - (analysisA?.powerScore || 0);
     });
@@ -166,8 +187,26 @@ const App: React.FC = () => {
 
       <main className="max-w-[1360px] mx-auto px-8 mt-10">
         <div className="grid grid-cols-1 gap-4">
+          {isTestActive && (
+            <div className="mb-6 space-y-2">
+              <div className="text-[10px] font-black uppercase tracking-widest text-amber-500 flex items-center gap-2 px-2">
+                <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+                Demo Simulation (3s)
+              </div>
+              <InstrumentRow
+                instrument={{ id: 'DEMO', symbol: 'DEMO/USD', name: 'Simulation Row', type: 'forex' }}
+                isConnected={true}
+                onToggleConnect={() => {}}
+                globalRefreshTrigger={refreshTrigger}
+                strategy={STRATEGIES[0]}
+                isTestMode={true}
+              />
+              <div className="h-px bg-white/5 my-4"></div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between px-6 py-3 bg-white/[0.02] rounded-xl border border-white/5 mb-4 text-[10px] font-black uppercase tracking-widest text-neutral-600">
-            <div className="w-24 text-center">Status</div>
+            <div className="w-24 text-center">Market</div>
             <div className="w-1/4 cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('symbol')}>Instrument</div>
             <div className="w-1/3 text-center">MTF Alignment (4H - 1H - 15M - 5M)</div>
             <div className="w-1/6 text-center cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('score')}>Score</div>
@@ -204,7 +243,7 @@ const App: React.FC = () => {
               globalRefreshTrigger={refreshTrigger}
               strategy={STRATEGIES[0]}
               onAnalysisUpdate={handleAnalysisUpdate}
-              isTestMode={isTestActive}
+              isTestMode={false}
               onOpenChart={setSelectedChartSymbol}
             />
           ))}
