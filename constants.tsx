@@ -17,6 +17,9 @@ export const INSTRUMENTS_DATA: Record<string, string[]> = {
   ],
   "commodities": [
     "XAG/USD", "XAU/USD", "WTI", "CC", "KC"
+  ],
+  "crypto": [
+    "BTC/USD", "ETH/USD", "SOL/USD", "BNB/USD", "XRP/USD", "ADA/USD", "DOT/USD", "LINK/USD"
   ]
 };
 

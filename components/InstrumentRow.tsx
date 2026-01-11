@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Instrument, MultiTimeframeAnalysis, SignalType, ActionType, Timeframe, Strategy, Candlestick } from '../types';
-import { fetchTimeSeries, PriceStore, resampleCandles } from '../services/twelveDataService';
+import { fetchTimeSeries, PriceStore, resampleCandles, fetchCryptoPrice } from '../services/twelveDataService';
 
 const GlobalAnalysisCache: Record<string, { analysis: MultiTimeframeAnalysis, trigger: number }> = {};
 
@@ -34,12 +34,15 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
 
   useEffect(() => {
     const interval = setInterval(() => {
+      if (instrument.type === 'crypto') {
+        fetchCryptoPrice(instrument.symbol);
+      }
       if (PriceStore[instrument.symbol]) {
         setCurrentPrice(PriceStore[instrument.symbol]);
       }
-    }, 1000);
+    }, 15000);
     return () => clearInterval(interval);
-  }, [instrument.symbol]);
+  }, [instrument.symbol, instrument.type]);
 
   const toggleBookmark = (e: React.MouseEvent) => {
     e.stopPropagation();

@@ -37,6 +37,32 @@ export const fetchTimeSeries = async (symbol: string, interval: Timeframe, outpu
   }
 };
 
+export const fetchCryptoPrice = async (symbol: string) => {
+  try {
+    const cryptoIdMap: Record<string, string> = {
+      'BTC/USD': 'bitcoin',
+      'ETH/USD': 'ethereum',
+      'SOL/USD': 'solana',
+      'BNB/USD': 'binancecoin',
+      'XRP/USD': 'ripple',
+      'ADA/USD': 'cardano',
+      'DOT/USD': 'polkadot',
+      'LINK/USD': 'chainlink'
+    };
+    
+    const id = cryptoIdMap[symbol];
+    if (!id) return;
+
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`);
+    const data = await res.json();
+    if (data[id]) {
+      PriceStore[symbol] = data[id].usd;
+    }
+  } catch (e) {
+    console.error("CoinGecko error:", e);
+  }
+};
+
 export const resampleCandles = (candles: Candlestick[], factor: number): Candlestick[] => {
   const resampled: Candlestick[] = [];
   for (let i = 0; i < candles.length; i += factor) {

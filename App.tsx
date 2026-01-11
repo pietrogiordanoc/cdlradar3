@@ -88,7 +88,7 @@ const App: React.FC = () => {
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tighter text-white uppercase">V4 Precision</h1>
+              <h1 className="text-2xl font-black tracking-tighter text-white uppercase">CDLRadar V4.2</h1>
               <div className="flex items-center space-x-2">
                 <span className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
                 <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Live Market Scanner</span>
