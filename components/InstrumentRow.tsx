@@ -167,7 +167,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
 
   const getActionText = (action?: ActionType, score: number = 0, mainSignal?: SignalType) => {
     if (action === ActionType.ENTRAR_AHORA && score >= 85) {
-      return mainSignal === SignalType.SALE ? 'VENDER AHORA' : 'COMPRAR AHORA';
+      return mainSignal === SignalType.SALE ? 'VENDER' : 'COMPRAR';
     }
     if (action === ActionType.MERCADO_CERRADO) return '🔒 CERRADO';
     return action || 'STANDBY';
