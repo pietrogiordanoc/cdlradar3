@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Instrument, MultiTimeframeAnalysis, SignalType, ActionType, Timeframe, Strategy, Candlestick } from '../types';
 import { fetchTimeSeries, PriceStore, resampleCandles, fetchCryptoPrice } from '../services/twelveDataService';
@@ -152,10 +151,11 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
     }
   }, [globalRefreshTrigger, performAnalysis, isTestMode, instrument.id]);
 
-  const getActionColor = (action?: ActionType, score: number = 0) => {
+  const getActionColor = (action?: ActionType, score: number = 0, mainSignal?: SignalType) => {
     if (isLoading) return 'text-neutral-700 border-white/5';
     if (action === ActionType.MERCADO_CERRADO) return 'text-neutral-500 bg-black/40 border-neutral-800/50';
     if (action === ActionType.ENTRAR_AHORA && score >= 85) {
+        if (mainSignal === SignalType.SALE) return 'text-rose-400 bg-rose-500/20 border-rose-400 shadow-[0_0_25px_rgba(244,63,94,0.4)] scale-105 precision-alert-blink font-black ring-1 ring-rose-500/50';
         return 'text-emerald-400 bg-emerald-500/20 border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.4)] scale-105 precision-alert-blink font-black ring-1 ring-emerald-500/50';
     }
     switch(action) {
@@ -163,6 +163,14 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
       case ActionType.ESPERAR: return 'text-amber-400 bg-amber-500/10 border-amber-400/50';
       default: return 'text-neutral-500 bg-white/5 border-white/5';
     }
+  };
+
+  const getActionText = (action?: ActionType, score: number = 0, mainSignal?: SignalType) => {
+    if (action === ActionType.ENTRAR_AHORA && score >= 85) {
+      return mainSignal === SignalType.SALE ? 'VENDER AHORA' : 'COMPRAR AHORA';
+    }
+    if (action === ActionType.MERCADO_CERRADO) return '🔒 CERRADO';
+    return action || 'STANDBY';
   };
 
   const getScoreColor = (score: number) => {
@@ -228,13 +236,21 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         <span className="text-[7px] text-neutral-700 font-bold uppercase tracking-tighter">Power Score</span>
       </div>
 
-      <div className={`px-5 py-2 rounded-xl border text-[10px] font-black uppercase tracking-[0.25em] min-w-[150px] text-center transition-all duration-500 ${getActionColor(analysis?.action, analysis?.powerScore)}`}>
+      <div className="flex flex-col items-center justify-center w-40 text-center">
+        {analysis?.action === ActionType.MERCADO_CERRADO ? (
+          <span className="text-[11px] font-black uppercase text-neutral-600 tracking-wider">MERCADO CERRADO</span>
+        ) : (
+          <span className="text-[11px] font-black uppercase text-emerald-400 tracking-wider drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]">MERCADO ABIERTO</span>
+        )}
+      </div>
+
+      <div className={`px-5 py-2 rounded-xl border text-[10px] font-black uppercase tracking-[0.25em] min-w-[150px] text-center transition-all duration-500 ${getActionColor(analysis?.action, analysis?.powerScore, analysis?.mainSignal)}`}>
         {isLoading ? (
           <div className="flex items-center justify-center space-x-2">
             <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"></span>
             <span>SCANNING</span>
           </div>
-        ) : (analysis?.action === ActionType.MERCADO_CERRADO ? '🔒 CERRADO' : (analysis?.action || 'STANDBY'))}
+        ) : getActionText(analysis?.action, analysis?.powerScore, analysis?.mainSignal)}
       </div>
 
       <div className="w-10 flex justify-center items-center">
