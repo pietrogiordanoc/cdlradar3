@@ -74,7 +74,8 @@ export const isMarketOpen = (type: string, symbol: string): boolean => {
   if (type === 'indices' || type === 'stocks') {
     if (day === 0 || day === 6) return false;
     const timeInMinutes = hour * 60 + minute;
-    return timeInMinutes >= 870 && timeInMinutes <= 1260; // 14:30 a 21:00 UTC
+    // 14:30 UTC = 870 min, 21:00 UTC = 1260 min
+    return timeInMinutes >= 870 && timeInMinutes <= 1260;
   }
   
   return day >= 1 && day <= 5;

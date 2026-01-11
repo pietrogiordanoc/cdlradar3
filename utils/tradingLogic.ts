@@ -1,11 +1,11 @@
 
-import { Strategy, MultiTimeframeAnalysis, SignalType, ActionType, Timeframe, Candlestick } from '../types';
+import { Strategy, MultiTimeframeAnalysis, SignalType, ActionType, Timeframe, Candlestick, Instrument } from '../types';
 import { analyzeSMC } from '../strategies/smcLux';
 import { analyzeSqzMom } from '../strategies/sqzMom';
 import { analyzeMACDUlt } from '../strategies/macdUlt';
 import { validateV4Signal } from './v4Validator';
 
-export const analyzeOrchestraV4 = (symbol: string, data: Partial<Record<Timeframe, Candlestick[]>>, isPrecisionMode: boolean): MultiTimeframeAnalysis => {
+export const analyzeOrchestraV4 = (symbol: string, data: Partial<Record<Timeframe, Candlestick[]>>, isPrecisionMode: boolean, instrument?: Instrument): MultiTimeframeAnalysis => {
   const smc = analyzeSMC(symbol, data, isPrecisionMode);
   const sqz = analyzeSqzMom(symbol, data, isPrecisionMode);
   const macd = analyzeMACDUlt(symbol, data, isPrecisionMode);
@@ -23,7 +23,7 @@ export const analyzeOrchestraV4 = (symbol: string, data: Partial<Record<Timefram
     else finalSignals[tf] = SignalType.NEUTRAL;
   });
 
-  const { action, score } = validateV4Signal(data, finalSignals['5min'], finalSignals, isPrecisionMode);
+  const { action, score } = validateV4Signal(data, finalSignals['5min'], finalSignals, isPrecisionMode, instrument);
 
   const m5Data = data['5min'];
   const price = m5Data && m5Data.length > 0 ? m5Data[m5Data.length - 1].close : 0;

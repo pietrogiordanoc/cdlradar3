@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Instrument, MultiTimeframeAnalysis, SignalType, ActionType, Timeframe, Strategy, Candlestick } from '../types';
 import { fetchTimeSeries, PriceStore, resampleCandles } from '../services/twelveDataService';
 
@@ -151,6 +151,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
 
   const getActionColor = (action?: ActionType, score: number = 0) => {
     if (isLoading) return 'text-neutral-700 border-white/5';
+    if (action === ActionType.MERCADO_CERRADO) return 'text-neutral-500 bg-black/40 border-neutral-800/50';
     if (action === ActionType.ENTRAR_AHORA && score >= 85) {
         return 'text-emerald-400 bg-emerald-500/20 border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.4)] scale-105 precision-alert-blink font-black ring-1 ring-emerald-500/50';
     }
@@ -184,7 +185,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         <div 
           className="h-7 w-12 rounded-full transition-all duration-300 flex items-center p-1 bg-neutral-800 border border-white/5"
         >
-          <div className={`h-5 w-5 rounded-full shadow-lg transition-all duration-500 ${isLoading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 translate-x-5 shadow-[0_0_10px_rgba(16,185,129,0.5)]'}`} />
+          <div className={`h-5 w-5 rounded-full shadow-lg transition-all duration-500 ${isLoading ? 'bg-amber-500 animate-pulse' : (analysis?.action === ActionType.MERCADO_CERRADO ? 'bg-neutral-600 translate-x-0' : 'bg-emerald-500 translate-x-5 shadow-[0_0_10px_rgba(16,185,129,0.5)]')}`} />
         </div>
       </div>
 
@@ -223,7 +224,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
             <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"></span>
             <span>SCANNING</span>
           </div>
-        ) : (analysis?.action || 'STANDBY')}
+        ) : (analysis?.action === ActionType.MERCADO_CERRADO ? '🔒 CERRADO' : (analysis?.action || 'STANDBY'))}
       </div>
 
       <div className="w-10 flex justify-center items-center">
