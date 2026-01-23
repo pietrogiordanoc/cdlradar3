@@ -1,0 +1,2 @@
+# Test de conexión con GitHub
+Este archivo fue creado para verificar que los commits y push se reflejan correctamente en el repositorio remoto.

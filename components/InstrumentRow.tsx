@@ -18,7 +18,20 @@ interface InstrumentRowProps {
 const InstrumentRow: React.FC<InstrumentRowProps> = ({ 
   instrument, isConnected, onToggleConnect, globalRefreshTrigger, strategy, onAnalysisUpdate, isTestMode = false, onOpenChart
 }) => {
-  // EL HOOK DEBE IR AQUÍ (Dentro de las llaves, no en los paréntesis)
+  // --- FUNCIÓN DE AUDIO RECUPERADA ---
+  const playAlertSound = useCallback((type: 'entry' | 'exit') => {
+    try {
+      const vol = parseFloat(localStorage.getItem('alertVolume') || '0.5');
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.setValueAtTime(type === 'entry' ? 440 : 660, audioCtx.currentTime);
+      osc.frequency.linearRampToValueAtTime(type === 'entry' ? 880 : 330, audioCtx.currentTime + 0.2);
+      gain.gain.setValueAtTime(vol * 0.1, audioCtx.currentTime);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+    } catch (e) {}
+  }, []);
   const [isFresh, setIsFresh] = useState(false);
   const [analysis, setAnalysis] = useState<MultiTimeframeAnalysis | null>(() => {
     return GlobalAnalysisCache[instrument.id]?.analysis || null;
@@ -269,6 +282,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         ))}
       </div>
 
+<<<<<<< HEAD
       <div className="flex flex-col items-center w-full md:w-1/6">
         <span className={`text-xl font-mono font-black ${getScoreColor(analysis?.powerScore || 0)}`}>
             {isLoading ? '---' : `${analysis?.powerScore || 0}`}
@@ -325,6 +339,23 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
             <div className="flex items-center space-x-1">
               <span className="text-[9px] text-emerald-500/50 font-bold uppercase tracking-tighter">TP:</span>
               <span className="text-[11px] font-mono font-bold text-emerald-500/80">${(tradeData.entry * (tradeData.type === 1 ? 1.01 : 0.99)).toLocaleString()}</span>
+=======
+              <div className="flex flex-col flex-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-mono font-bold text-white text-lg">{instrument.symbol}</span>
+                    {isFresh && <span className="px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black animate-pulse">NOW</span>}
+                    {/* BOTÓN DE GRÁFICO (ÚNICO ELEMENTO QUE CAMBIA DE COLOR) */}
+                    <button 
+                      onClick={() => onOpenChart?.(instrument.symbol)} 
+                      className={`p-1.5 rounded-lg transition-colors border flex items-center justify-center ${isChartOpen ? 'bg-sky-500/20 border-sky-500/50 text-sky-400' : 'bg-white/5 border-white/5 text-neutral-500 hover:text-sky-400'}`}
+                    >📈</button>
+                  </div>
+                  {currentPrice > 0 && <span className="text-[14px] font-mono text-white font-black">${currentPrice.toLocaleString()}</span>}
+                </div>
+                <span className="text-[9px] text-neutral-500 uppercase tracking-widest leading-none mt-0.5">{instrument.name}</span>
+              </div>
+>>>>>>> 35a8012 (Agregar archivos no rastreados, incluyendo vercel.json)
             </div>
           </div>
         )}
