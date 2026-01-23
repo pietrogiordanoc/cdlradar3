@@ -115,14 +115,42 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         </div>
       </div>
 
-        {/* COLUMNA INSTRUMENT */}
+        {/* COLUMNA INSTRUMENT CON ICONOS REALES (QUIRÚRGICO) */}
         <div className="w-1/4 flex flex-col">
-          <div className="flex items-center space-x-2">
-            <span className="font-mono font-bold text-white text-lg">{instrument.symbol}</span>
-            {isFresh && <span className="px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black animate-pulse">NOW</span>}
-            <button onClick={() => onOpenChart?.(instrument.symbol)} className="p-1.5 hover:bg-white/10 rounded-lg text-neutral-500 hover:text-sky-400 transition-colors">📈</button>
+          <div className="flex items-center space-x-3">
+            {/* Contenedor de Icono */}
+            <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
+              {instrument.type === 'crypto' ? (
+                <img 
+                  src={`https://coinicons-api.vercel.app/api/icon/${instrument.symbol.split('/')[0].toLowerCase()}`} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://www.tradingview.com/static/images/ant-empty.svg'; }}
+                  alt=""
+                />
+              ) : instrument.type === 'forex' ? (
+                <div className="flex -space-x-2">
+                  <img src={`https://flagcdn.com/w40/${instrument.symbol.slice(0,2).toLowerCase()}.png`} className="w-5 h-5 rounded-full object-cover border border-black" alt="" />
+                  <img src={`https://flagcdn.com/w40/${instrument.symbol.slice(3,5).toLowerCase()}.png`} className="w-5 h-5 rounded-full object-cover border border-black" alt="" />
+                </div>
+              ) : (
+                <img 
+                  src={`https://s3-symbol-logo.tradingview.com/${instrument.symbol.split(':')[1] || instrument.symbol}.svg`} 
+                  className="w-full h-full object-contain p-1"
+                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://www.tradingview.com/static/images/ant-empty.svg'; }}
+                  alt=""
+                />
+              )}
+            </div>
+
+            <div className="flex flex-col">
+              <div className="flex items-center space-x-2">
+                <span className="font-mono font-bold text-white text-lg tracking-tight">{instrument.symbol}</span>
+                {isFresh && <span className="px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black animate-pulse">NOW</span>}
+                <button onClick={() => onOpenChart?.(instrument.symbol)} className="p-1.5 hover:bg-white/10 rounded-lg text-neutral-500 hover:text-sky-400 transition-colors">📈</button>
+              </div>
+              <span className="text-[9px] text-neutral-500 uppercase tracking-widest leading-none">{instrument.name}</span>
+            </div>
           </div>
-          <span className="text-[9px] text-neutral-500 uppercase tracking-widest">{instrument.name}</span>
         </div>
 
         {/* COLUMNA MTF (RESTAURADA) */}
