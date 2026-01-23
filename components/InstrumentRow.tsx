@@ -49,10 +49,27 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
           '5min': data5m, '15min': resampleCandles(data5m, 3),
           '1h': resampleCandles(data5m, 12), '4h': resampleCandles(data5m, 48)
         };
+        // --- RESTAURACIÓN QUIRÚRGICA DEL AUDIO Y ETIQUETA NOW ---
         const result = strategy.analyze(instrument.symbol, combinedData as any, false, instrument);
         
-        if (result.action !== lastActionRef.current) setIsFresh(true);
-        else setIsFresh(false);
+        // Detectamos si la señal es nueva respecto al ciclo anterior
+        if (result.action !== lastActionRef.current) {
+          // 1. Si la señal es COMPRAR/VENDER y tiene fuerza, suena 'entry'
+          if (result.action === ActionType.ENTRAR_AHORA && result.powerScore >= 85) {
+            playAlertSound('entry');
+            setIsFresh(true); // Activa etiqueta NOW
+          } 
+          // 2. Si la señal es SALIR, suena 'exit'
+          else if (result.action === ActionType.SALIR) {
+            playAlertSound('exit');
+            setIsFresh(true); // Activa etiqueta NOW
+          } else {
+            setIsFresh(false);
+          }
+        } else {
+          // Si en el refresco la señal sigue siendo la misma, quitamos el "NOW"
+          setIsFresh(false);
+        }
 
         lastActionRef.current = result.action;
         setAnalysis(result);
