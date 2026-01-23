@@ -214,7 +214,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
           </div>
         </div>
 
-        {/* CAMBIO QUIRÚRGICO: ELIMINADO EL BLOQUE DE MINIATURA NEGRA (isChartOpen && ...) */}
+        // CAMBIO QUIRÚRGICO: El bloque de miniatura negra ha sido eliminado. Solo el icono 📈 cambia de color.
       </div>
     );
   );
