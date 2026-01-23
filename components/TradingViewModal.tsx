@@ -20,7 +20,8 @@ const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose }) 
     script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
     script.type = 'text/javascript';
     script.async = true;
-    script.innerHTML = JSON.stringify({
+    
+    const config = {
       "autosize": true,
       "symbol": tvSymbol,
       "interval": "15",
@@ -30,49 +31,56 @@ const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose }) 
       "locale": "en",
       "enable_publishing": false,
       "allow_symbol_change": true,
-      "hide_side_toolbar": false, // MOSTRAR HERRAMIENTAS
+      "hide_side_toolbar": false,
       "withdateranges": true,
       "save_image": true,
       "details": true,
       "hotlist": true,
       "calendar": false,
-      "support_host": "https://www.tradingview.com"
-    });
+      "support_host": "https://www.tradingview.com",
+      "favorites": {
+        "intervals": ["5", "15", "60", "240"]
+      }
+    };
+
+    script.innerHTML = JSON.stringify(config);
 
     if (containerRef.current) {
       containerRef.current.innerHTML = '';
       containerRef.current.appendChild(script);
     }
+    
+    return () => {
+      if (containerRef.current) containerRef.current.innerHTML = '';
+    };
   }, [symbol]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 bg-black/90 backdrop-blur-md">
-      {/* 
-        TEST DE DIAGNÓSTICO: 
-        1. He cambiado max-w-6xl por w-[98vw] 
-        2. He cambiado h-[80vh] por h-[96vh]
-        3. He añadido border-red-500 para confirmar que el archivo es el correcto.
-      */}
-      <div className="relative w-[98vw] h-[96vh] bg-[#0f0f0f] border-2 border-red-500 rounded-3xl overflow-hidden shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
-          <div className="flex items-center space-x-3">
-            <span className="text-xl font-black tracking-tighter text-white">{symbol}</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">Live Technical Chart</span>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 bg-black/95 backdrop-blur-xl">
+      <div className="relative w-[98vw] h-[96vh] bg-[#0f0f0f] border-2 border-red-500 rounded-[32px] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col">
+        
+        <div className="flex items-center justify-between px-8 py-5 border-b border-white/5 bg-white/[0.01]">
+          <div className="flex items-center space-x-4">
+            <span className="text-2xl font-black tracking-tighter text-white">{symbol}</span>
+            <div className="flex items-center px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse mr-2"></span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Live Advanced Engine</span>
+            </div>
           </div>
+          
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors text-neutral-400 hover:text-white"
+            className="group p-3 hover:bg-white/10 rounded-2xl transition-all duration-300 text-neutral-500 hover:text-white"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            <svg className="w-6 h-6 transform group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        
-        {/* Contenedor del gráfico ocupando el resto del espacio */}
-        <div className="absolute inset-0 top-[60px] bottom-0 w-full h-full pb-[60px]">
-          <div ref={containerRef} className="tradingview-widget-container" style={{ height: "100%", width: "100%" }}>
-            <div className="tradingview-widget-container__widget"></div>
+
+        <div className="flex-1 w-full relative">
+          <div ref={containerRef} className="tradingview-widget-container h-full w-full">
+            <div className="tradingview-widget-container__widget h-full w-full"></div>
           </div>
         </div>
       </div>
