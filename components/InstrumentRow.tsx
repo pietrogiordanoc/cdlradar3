@@ -118,25 +118,35 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         {/* COLUMNA INSTRUMENT CON ICONOS REALES (QUIRÚRGICO) */}
         <div className="w-1/4 flex flex-col">
           <div className="flex items-center space-x-3">
-            {/* Contenedor de Icono */}
+            {/* CONTENEDOR DE ICONO - CORRECCIÓN QUIRÚRGICA DEFINITIVA */}
             <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
-              {instrument.type === 'crypto' ? (
-                <img 
-                  src={`https://coinicons-api.vercel.app/api/icon/${instrument.symbol.split('/')[0].toLowerCase()}`} 
-                  className="w-full h-full object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://www.tradingview.com/static/images/ant-empty.svg'; }}
-                  alt=""
-                />
-              ) : instrument.type === 'forex' ? (
+              {instrument.type === 'forex' && instrument.symbol.includes('/') ? (
                 <div className="flex -space-x-2">
-                  <img src={`https://flagcdn.com/w40/${instrument.symbol.slice(0,2).toLowerCase()}.png`} className="w-5 h-5 rounded-full object-cover border border-black" alt="" />
-                  <img src={`https://flagcdn.com/w40/${instrument.symbol.slice(3,5).toLowerCase()}.png`} className="w-5 h-5 rounded-full object-cover border border-black" alt="" />
+                  <img 
+                    src={`https://flagcdn.com/w40/${instrument.symbol.split('/')[0].substring(0,2).toLowerCase()}.png`} 
+                    className="w-5 h-5 rounded-full object-cover border border-black" 
+                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                    alt="" 
+                  />
+                  <img 
+                    src={`https://flagcdn.com/w40/${instrument.symbol.split('/')[1].substring(0,2).toLowerCase()}.png`} 
+                    className="w-5 h-5 rounded-full object-cover border border-black" 
+                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                    alt="" 
+                  />
                 </div>
               ) : (
                 <img 
-                  src={`https://s3-symbol-logo.tradingview.com/${instrument.symbol.split(':')[1] || instrument.symbol}.svg`} 
+                  src={instrument.type === 'crypto' 
+                    ? `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${instrument.symbol.split('/')[0].toLowerCase()}.png`
+                    : `https://s3-symbol-logo.tradingview.com/${instrument.symbol.split(':')[1] || instrument.symbol.split('/')[0]}.svg`
+                  } 
                   className="w-full h-full object-contain p-1"
-                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://www.tradingview.com/static/images/ant-empty.svg'; }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) parent.innerHTML = `<span class=\"text-[10px] font-bold text-neutral-500\">${instrument.symbol.charAt(0)}</span>`;
+                  }}
                   alt=""
                 />
               )}
