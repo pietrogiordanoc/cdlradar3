@@ -23,19 +23,33 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
   });
   const [isLoading, setIsLoading] = useState(false);
   const [currentPrice, setCurrentPrice] = useState<number>(0);
-  // --- CAMBIO QUIRÚRGICO: Trade Tracker de 3 estados ---
-  const [tradeMarker, setTradeMarker] = useState<number>(() => {
-    return parseInt(localStorage.getItem(`trade_marker_${instrument.id}`) || '0');
+  // --- CAMBIO QUIRÚRGICO: Trade Tracker con P&L ---
+  useEffect(() => {
+    // Ya no pedimos datos cada 15s. El precio se actualizará 
+    // automáticamente cuando el Radar haga su refresco global (cada 5 min).
+    if (PriceStore[instrument.symbol]) {
+      setCurrentPrice(PriceStore[instrument.symbol]);
+    }
+  }, [analysis]); // Se actualiza solo cuando hay nuevo análisis
+
+  const [tradeData, setTradeData] = useState<{type: number, entry: number}>(() => {
+    const saved = localStorage.getItem(`trade_data_${instrument.id}`);
+    return saved ? JSON.parse(saved) : { type: 0, entry: 0 };
   });
 
   const cycleTradeMarker = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setTradeMarker(prev => {
-      const nextState = (prev + 1) % 3; // Ciclo: 0 -> 1 -> 2 -> 0
-      localStorage.setItem(`trade_marker_${instrument.id}`, nextState.toString());
-      return nextState;
+    setTradeData(prev => {
+      const nextType = (prev.type + 1) % 3; // 0:Nada, 1:Compra, 2:Venta
+      const newData = { type: nextType, entry: nextType !== 0 ? (currentPrice || analysis?.price || 0) : 0 };
+      localStorage.setItem(`trade_data_${instrument.id}`, JSON.stringify(newData));
+      return newData;
     });
   };
+
+  const pnl = (tradeData.type !== 0 && (currentPrice || analysis?.price) && tradeData.entry) 
+    ? (tradeData.type === 1 ? ((currentPrice || analysis?.price || 0) - tradeData.entry) : (tradeData.entry - (currentPrice || analysis?.price || 0))) / tradeData.entry * 100 
+    : null;
 
   const lastActionRef = useRef<ActionType | null>(null);
   const lastRefreshTriggerRef = useRef<number>(GlobalAnalysisCache[instrument.id]?.trigger ?? -1);
@@ -264,36 +278,29 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         ) : getActionText(analysis?.action, analysis?.powerScore, analysis?.mainSignal)}
       </div>
 
-      {/* --- CAMBIO QUIRÚRGICO: COLUMNA DE TRADE TRACKER (MIS TRADES) --- */}
-      <div className="flex items-center ml-12 pl-6 border-l border-white/5 min-w-[80px]">
+      {/* --- NUEVA COLUMNA: TRADE TRACKER --- */}
+      <div className="flex items-center ml-10 pl-6 border-l border-white/5 min-w-[140px]">
         <button 
           onClick={cycleTradeMarker}
-          className={`group relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 border
-            ${tradeMarker === 1 ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 
-              tradeMarker === 2 ? 'bg-rose-500/20 border-rose-500/50 text-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 
-              'bg-white/5 border-white/5 text-neutral-800 hover:border-white/10 hover:text-neutral-600'}`}
-          title={tradeMarker === 1 ? "Tengo Compra abierta" : tradeMarker === 2 ? "Tengo Venta abierta" : "Marcar mi Trade"}
+          className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 border mr-4
+            ${tradeData.type === 1 ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 
+              tradeData.type === 2 ? 'bg-rose-500/20 border-rose-500/50 text-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 
+              'bg-white/5 border-white/5 text-neutral-800 hover:text-neutral-600'}`}
         >
-          {tradeMarker === 0 && (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-          )}
-          {tradeMarker === 1 && (
-            <svg className="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 4l-8 8h5v8h6v-8h5z" />
-            </svg>
-          )}
-          {tradeMarker === 2 && (
-            <svg className="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 20l8-8h-5v-8h-6v8h-5z" />
-            </svg>
-          )}
-          {/* Label flotante muy sutil para saber qué marcamos */}
-          <span className="absolute -bottom-6 text-[7px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            {tradeMarker === 0 ? "Sin Trade" : tradeMarker === 1 ? "Bought" : "Sold"}
-          </span>
+          {tradeData.type === 0 ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M12 4.5v15m7.5-7.5h-15" /></svg> : 
+           tradeData.type === 1 ? <svg className="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z" /></svg> : 
+                                  <svg className="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l8-8h-5v-8h-6v8h-5z" /></svg>}
         </button>
+
+        {tradeData.type !== 0 && (
+          <div className="flex flex-col">
+            <span className={`text-[11px] font-mono font-black ${pnl && pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {pnl && pnl >= 0 ? '+' : ''}{pnl?.toFixed(2)}%
+            </span>
+            <span className="text-[7px] text-neutral-600 font-bold uppercase tracking-widest">Entry: ${tradeData.entry.toLocaleString()}</span>
+            <span className="text-[7px] text-emerald-500/40 font-bold">TP (1%): ${(tradeData.entry * (tradeData.type === 1 ? 1.01 : 0.99)).toLocaleString()}</span>
+          </div>
+        )}
       </div>
     </div>
   );
