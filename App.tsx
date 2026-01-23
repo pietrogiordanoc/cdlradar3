@@ -277,6 +277,7 @@ const App: React.FC = () => {
                 }
                 setActiveChart(symbol);
               }}
+              isChartOpen={openCharts.includes(instrument.symbol)}
             />
           ))}
           {filteredInstruments.length === 0 && (
