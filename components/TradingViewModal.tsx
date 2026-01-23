@@ -2,10 +2,11 @@ import React, { useEffect, useRef } from 'react';
 
 interface TradingViewModalProps {
   symbol: string;
-  onClose: () => void;
+  onClose: () => void;      // Minimizar (bajar al tray)
+  onTerminate: () => void;  // Cerrar y borrar dibujos
 }
 
-const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose }) => {
+const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose, onTerminate }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -93,14 +94,25 @@ const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose }) 
             </div>
           </div>
           
-          <button 
-            onClick={onClose}
-            className="group p-3 hover:bg-white/10 rounded-2xl transition-all duration-300 text-neutral-500 hover:text-white"
-          >
-            <svg className="w-6 h-6 transform group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center space-x-3">
+            {/* BOTÓN MINIMIZAR (Bajar al Tray) */}
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-white/10 rounded-xl text-neutral-400 hover:text-sky-400"
+              title="Minimizar (Mantiene dibujos)"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+
+            {/* BOTÓN CERRAR TOTAL */}
+            <button 
+              onClick={onTerminate}
+              className="p-2 hover:bg-rose-500/20 rounded-xl text-neutral-400 hover:text-rose-500"
+              title="Cerrar Gráfico (Borra dibujos)"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 w-full relative">

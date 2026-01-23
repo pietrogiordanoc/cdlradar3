@@ -26,6 +26,19 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [currentPrice, setCurrentPrice] = useState<number>(0);
   // --- CAMBIO QUIRÚRGICO: Trade Tracker con P&L ---
+  // --- SONIDO DE TP (Éxito) ---
+  const playTPSound = () => {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+  };
   useEffect(() => {
     // Ya no pedimos datos cada 15s. El precio se actualizará 
     // automáticamente cuando el Radar haga su refresco global (cada 5 min).
@@ -33,6 +46,19 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
       setCurrentPrice(PriceStore[instrument.symbol]);
     }
   }, [analysis]); // Se actualiza solo cuando hay nuevo análisis
+
+  // --- ALERTA SONORA TP ---
+  useEffect(() => {
+    if (tradeData.type !== 0 && currentPrice > 0) {
+      const tpPrice = tradeData.type === 1 ? tradeData.entry * 1.01 : tradeData.entry * 0.99;
+      const isTPHit = tradeData.type === 1 ? currentPrice >= tpPrice : currentPrice <= tpPrice;
+      // Si toca el TP y no hemos avisado antes
+      if (isTPHit && !localStorage.getItem(`tp_hit_${instrument.id}`)) {
+        playTPSound();
+        localStorage.setItem(`tp_hit_${instrument.id}`, 'true'); // Solo suena una vez
+      }
+    }
+  }, [currentPrice, tradeData, instrument.id]);
 
   const [tradeData, setTradeData] = useState<{type: number, entry: number}>(() => {
     const saved = localStorage.getItem(`trade_data_${instrument.id}`);
