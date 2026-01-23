@@ -37,6 +37,7 @@ const App: React.FC = () => {
 
   const handleRefreshComplete = useCallback(() => {
     setRefreshTrigger(t => t + 1);
+    setSortConfig(null); // CAMBIO QUIRÚRGICO: Restablece el orden al Score por defecto
   }, []);
 
   const handleAnalysisUpdate = useCallback((id: string, data: MultiTimeframeAnalysis | null) => {
@@ -123,13 +124,17 @@ const App: React.FC = () => {
         if (valA > valB) return direction === 'asc' ? 1 : -1;
       }
 
-      // Default sort by score and entries
+      // CAMBIO QUIRÚRGICO: Prioridad absoluta al Score, luego desempate por acción
+      const scoreA = analysisA?.powerScore || 0;
+      const scoreB = analysisB?.powerScore || 0;
+      if (scoreB !== scoreA) return scoreB - scoreA;
+
       const isEntryA = analysisA?.action === ActionType.ENTRAR_AHORA;
       const isEntryB = analysisB?.action === ActionType.ENTRAR_AHORA;
       if (isEntryA && !isEntryB) return -1;
       if (!isEntryA && isEntryB) return 1;
       
-      return (analysisB?.powerScore || 0) - (analysisA?.powerScore || 0);
+      return 0;
     });
   }, [filter, actionFilter, searchQuery, sortConfig, refreshTrigger]);
 
