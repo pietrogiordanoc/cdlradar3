@@ -9,7 +9,6 @@ const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose }) 
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Mapeo básico de símbolos para el widget de TradingView
     let tvSymbol = symbol.replace('/', '');
     if (symbol.includes('/')) {
       tvSymbol = `FX:${tvSymbol}`;
@@ -30,10 +29,12 @@ const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose }) 
       "style": "1",
       "locale": "en",
       "enable_publishing": false,
-      "allow_symbol_change": false,
-      "hide_side_toolbar": false, // CAMBIO QUIRÚRGICO: Habilita herramientas de dibujo
-      "withdateranges": true,      // CAMBIO QUIRÚRGICO: Habilita rango de fechas inferior
-      "save_image": true,          // CAMBIO QUIRÚRGICO: Permite guardar capturas
+      "allow_symbol_change": true,
+      "hide_side_toolbar": false, // MOSTRAR HERRAMIENTAS
+      "withdateranges": true,
+      "save_image": true,
+      "details": true,
+      "hotlist": true,
       "calendar": false,
       "support_host": "https://www.tradingview.com"
     });
@@ -45,9 +46,14 @@ const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose }) 
   }, [symbol]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-      {/* CAMBIO QUIRÚRGICO: max-w-[95vw] y h-[92vh] para aumentar el tamaño significativamente */}
-      <div className="relative w-full max-w-[95vw] h-[92vh] bg-[#0f0f0f] border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 bg-black/90 backdrop-blur-md">
+      {/* 
+        TEST DE DIAGNÓSTICO: 
+        1. He cambiado max-w-6xl por w-[98vw] 
+        2. He cambiado h-[80vh] por h-[96vh]
+        3. He añadido border-red-500 para confirmar que el archivo es el correcto.
+      */}
+      <div className="relative w-[98vw] h-[96vh] bg-[#0f0f0f] border-2 border-red-500 rounded-3xl overflow-hidden shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
           <div className="flex items-center space-x-3">
             <span className="text-xl font-black tracking-tighter text-white">{symbol}</span>
@@ -62,8 +68,9 @@ const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose }) 
             </svg>
           </button>
         </div>
-        {/* Ajuste de padding inferior para que el gráfico use todo el espacio */}
-        <div className="w-full h-full pb-16">
+        
+        {/* Contenedor del gráfico ocupando el resto del espacio */}
+        <div className="absolute inset-0 top-[60px] bottom-0 w-full h-full pb-[60px]">
           <div ref={containerRef} className="tradingview-widget-container" style={{ height: "100%", width: "100%" }}>
             <div className="tradingview-widget-container__widget"></div>
           </div>
