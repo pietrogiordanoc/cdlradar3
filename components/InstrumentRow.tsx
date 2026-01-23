@@ -224,7 +224,100 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
 
         {/* CAMBIO QUIRÚRGICO: El bloque de miniatura negra ha sido eliminado. Solo el icono 📈 cambia de color. */}
       </div>
+<<<<<<< HEAD
     );
+=======
+
+      <div className="flex space-x-6 w-full md:w-1/3 justify-center">
+        {(['4h', '1h', '15min', '5min'] as Timeframe[]).map(tf => (
+          <div key={tf} className="flex flex-col items-center">
+            <span className="text-[7px] text-neutral-500 font-bold mb-1 uppercase">{tf}</span>
+            <div className={`h-2 w-8 rounded-full transition-all duration-700 ${getSignalDotColor(tf)}`}></div>
+          </div>
+        ))}
+      </div>
+
+<<<<<<< HEAD
+      <div className="flex flex-col items-center w-full md:w-1/6">
+        <span className={`text-xl font-mono font-black ${getScoreColor(analysis?.powerScore || 0)}`}>
+            {isLoading ? '---' : `${analysis?.powerScore || 0}`}
+        </span>
+        <span className="text-[7px] text-neutral-700 font-bold uppercase tracking-tighter">Power Score</span>
+      </div>
+
+      <div className="flex flex-col items-center justify-center w-40 text-center">
+        {marketOpen ? (
+          <span className="text-[11px] font-black uppercase text-emerald-500 tracking-wider drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]">ABIERTO</span>
+        ) : (
+          <span className="text-[11px] font-black uppercase text-neutral-600 tracking-wider">CERRADO</span>
+        )}
+      </div>
+
+      {/* SECCIÓN DE ACCIÓN (SISTEMA) */}
+      <div className={`px-5 py-2 rounded-xl border text-[10px] font-black uppercase tracking-[0.25em] min-w-[150px] text-center transition-all duration-500 ${getActionColor(analysis?.action, analysis?.powerScore, analysis?.mainSignal)}`}>
+        {isLoading ? (
+          <div className="flex items-center justify-center space-x-2">
+            <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"></span>
+            <span>SCANNING</span>
+          </div>
+        ) : getActionText(analysis?.action, analysis?.powerScore, analysis?.mainSignal)}
+      </div>
+
+      {/* --- COLUMNA TRADE TRACKER MEJORADA (MÁS LEGIBLE) --- */}
+      <div className="flex items-center ml-8 pl-6 border-l border-white/5 min-w-[180px]">
+        {/* Botón de Acción con Icono más grande */}
+        <button 
+          onClick={cycleTradeMarker}
+          className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 border mr-5
+            ${tradeData.type === 1 ? 'bg-emerald-500 border-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 
+              tradeData.type === 2 ? 'bg-rose-500 border-rose-400 text-black shadow-[0_0_20px_rgba(244,63,94,0.4)]' : 
+              'bg-white/5 border-white/10 text-neutral-700 hover:text-neutral-400 hover:bg-white/10'}`}
+        >
+          {tradeData.type === 0 ? <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M12 4.5v15m7.5-7.5h-15" /></svg> : 
+           tradeData.type === 1 ? <svg className="w-8 h-8 animate-bounce" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z" /></svg> : 
+                                  <svg className="w-8 h-8 animate-bounce" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l8-8h-5v-8h-6v8h-5z" /></svg>}
+        </button>
+
+        {/* Bloque de Información con Jerarquía Visual */}
+        {tradeData.type !== 0 && (
+          <div className="flex flex-col space-y-1">
+            {/* P&L con fondo para resaltar */}
+            <div className={`text-sm font-mono font-black px-2 py-0.5 rounded-md w-fit ${pnl && pnl > 0 ? 'text-emerald-400 bg-emerald-500/10' : pnl && pnl < 0 ? 'text-rose-400 bg-rose-500/10' : 'text-neutral-400 bg-white/5'}`}>
+              {pnl && pnl > 0 ? '+' : ''}{pnl?.toFixed(2)}%
+            </div>
+            {/* Entry Price con Label */}
+            <div className="flex items-center space-x-1">
+              <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-tighter">In:</span>
+              <span className="text-[11px] font-mono font-bold text-white">${tradeData.entry.toLocaleString()}</span>
+            </div>
+            {/* TP con color distintivo */}
+            <div className="flex items-center space-x-1">
+              <span className="text-[9px] text-emerald-500/50 font-bold uppercase tracking-tighter">TP:</span>
+              <span className="text-[11px] font-mono font-bold text-emerald-500/80">${(tradeData.entry * (tradeData.type === 1 ? 1.01 : 0.99)).toLocaleString()}</span>
+=======
+              <div className="flex flex-col flex-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-mono font-bold text-white text-lg">{instrument.symbol}</span>
+                    {isFresh && <span className="px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black animate-pulse">NOW</span>}
+                    {/* BOTÓN DE GRÁFICO (ÚNICO ELEMENTO QUE CAMBIA DE COLOR) */}
+                    <button 
+                      onClick={() => onOpenChart?.(instrument.symbol)} 
+                      className={`p-1.5 rounded-lg transition-colors border flex items-center justify-center ${isChartOpen ? 'bg-sky-500/20 border-sky-500/50 text-sky-400' : 'bg-white/5 border-white/5 text-neutral-500 hover:text-sky-400'}`}
+                    >📈</button>
+                  </div>
+                  {currentPrice > 0 && <span className="text-[14px] font-mono text-white font-black">${currentPrice.toLocaleString()}</span>}
+                </div>
+                <span className="text-[9px] text-neutral-500 uppercase tracking-widest leading-none mt-0.5">{instrument.name}</span>
+              </div>
+>>>>>>> 35a8012 (Agregar archivos no rastreados, incluyendo vercel.json)
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+>>>>>>> bbd3d55
 };
 
 export default memo(InstrumentRow);
