@@ -6,71 +6,78 @@ const GlobalAnalysisCache: Record<string, { analysis: MultiTimeframeAnalysis, tr
 
 interface InstrumentRowProps {
   instrument: Instrument;
-  isConnected: boolean;
-  onToggleConnect: (id: string) => void;
   globalRefreshTrigger: number;
   strategy: Strategy;
   onAnalysisUpdate?: (id: string, data: MultiTimeframeAnalysis | null) => void;
-  isTestMode?: boolean;
   onOpenChart?: (symbol: string) => void;
+  isChartOpen?: boolean;
 }
 
-
 const InstrumentRow: React.FC<InstrumentRowProps> = ({ 
-  instrument, isConnected, onToggleConnect, globalRefreshTrigger, strategy, onAnalysisUpdate, isTestMode = false, onOpenChart
+  instrument, globalRefreshTrigger, strategy, onAnalysisUpdate, onOpenChart, isChartOpen
 }) => {
   const [isFresh, setIsFresh] = useState(false);
   const [analysis, setAnalysis] = useState<MultiTimeframeAnalysis | null>(() => GlobalAnalysisCache[instrument.id]?.analysis || null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPrice, setCurrentPrice] = useState<number>(0);
-
-  // TRADE TRACKER DATA
+  
+  // TRADE TRACKER
   const [tradeData, setTradeData] = useState<{type: number, entry: number}>(() => {
     const saved = localStorage.getItem(`trade_data_${instrument.id}`);
     return saved ? JSON.parse(saved) : { type: 0, entry: 0 };
   });
 
+  const lastActionRef = useRef<ActionType | null>(null);
   const lastRefreshTriggerRef = useRef<number>(GlobalAnalysisCache[instrument.id]?.trigger ?? -1);
 
-  // ACTUALIZACIÓN DE PRECIO (Sin CoinGecko para evitar error 429)
+  // EFECTOS Y ANÁLISIS (RESTAURADO)
+  const performAnalysis = useCallback(async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      const data5m = await fetchTimeSeries(instrument.symbol, '5min', 5000);
+      if (data5m.length >= 100) {
+        const combinedData = {
+          '5min': data5m, '15min': resampleCandles(data5m, 3),
+          '1h': resampleCandles(data5m, 12), '4h': resampleCandles(data5m, 48)
+        };
+        const result = strategy.analyze(instrument.symbol, combinedData as any, false, instrument);
+        
+        if (result.action !== lastActionRef.current) setIsFresh(true);
+        else setIsFresh(false);
+
+        lastActionRef.current = result.action;
+        setAnalysis(result);
+        GlobalAnalysisCache[instrument.id] = { analysis: result, trigger: globalRefreshTrigger };
+        if (onAnalysisUpdate) onAnalysisUpdate(instrument.id, result);
+      }
+    } finally { setIsLoading(false); }
+  }, [instrument, strategy, globalRefreshTrigger]);
+
   useEffect(() => {
-    if (PriceStore[instrument.symbol]) {
-      setCurrentPrice(PriceStore[instrument.symbol]);
+    if (globalRefreshTrigger !== lastRefreshTriggerRef.current) {
+      lastRefreshTriggerRef.current = globalRefreshTrigger;
+      performAnalysis();
     }
+  }, [globalRefreshTrigger, performAnalysis]);
+
+  useEffect(() => {
+    if (PriceStore[instrument.symbol]) setCurrentPrice(PriceStore[instrument.symbol]);
   }, [analysis]);
 
-  // SONIDOS
-  const playAlertSound = useCallback((type: 'entry' | 'exit') => {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.frequency.setValueAtTime(type === 'entry' ? 440 : 660, audioCtx.currentTime);
-    osc.frequency.linearRampToValueAtTime(type === 'entry' ? 880 : 330, audioCtx.currentTime + 0.2);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-  }, []);
+  // UI HELPERS (RESTAURADOS)
+  const getActionColor = (action?: ActionType, score: number = 0) => {
+    if (action === ActionType.ENTRAR_AHORA && score >= 85) return 'text-emerald-400 bg-emerald-500/20 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]';
+    if (action === ActionType.SALIR) return 'text-rose-400 bg-rose-500/20 border-rose-400';
+    if (action === ActionType.ESPERAR) return 'text-amber-400 bg-amber-500/10 border-amber-400/30';
+    return 'text-neutral-500 bg-white/5 border-white/5';
+  };
 
-  const playTPSound = useCallback(() => {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.1);
-    osc.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-  }, []);
-
-  // VIGILANCIA DE TAKE PROFIT
-  useEffect(() => {
-    if (tradeData.type !== 0 && currentPrice > 0) {
-      const tpPrice = tradeData.type === 1 ? tradeData.entry * 1.01 : tradeData.entry * 0.99;
-      const isTPHit = tradeData.type === 1 ? currentPrice >= tpPrice : currentPrice <= tpPrice;
-      if (isTPHit && !localStorage.getItem(`tp_hit_${instrument.id}`)) {
-        playTPSound();
-        localStorage.setItem(`tp_hit_${instrument.id}`, 'true');
-      }
-    }
-  }, [currentPrice, tradeData, instrument.id, playTPSound]);
+  const getSignalDotColor = (tf: Timeframe) => {
+    if (!analysis?.signals) return 'bg-neutral-800';
+    const sig = analysis.signals[tf];
+    return sig === SignalType.BUY ? 'bg-emerald-500' : sig === SignalType.SALE ? 'bg-rose-500' : 'bg-neutral-800';
+  };
 
   const cycleTradeMarker = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -78,44 +85,76 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
       const nextType = (prev.type + 1) % 3;
       const newData = { type: nextType, entry: nextType !== 0 ? (currentPrice || analysis?.price || 0) : 0 };
       localStorage.setItem(`trade_data_${instrument.id}`, JSON.stringify(newData));
-      localStorage.removeItem(`tp_hit_${instrument.id}`);
       return newData;
     });
   };
 
-  const pnl = (tradeData.type !== 0 && (currentPrice || analysis?.price) && tradeData.entry) 
-    ? (tradeData.type === 1 ? ((currentPrice || analysis?.price || 0) - tradeData.entry) : (tradeData.entry - (currentPrice || analysis?.price || 0))) / tradeData.entry * 100 
-    : null;
-
-  // Lógica de análisis (PerformAnalysis omitida para brevedad pero mantenla igual a tu original)
-  // ... (Aquí va tu función performAnalysis y el useEffect que la llama)
-
-  const marketOpen = isMarketOpen(instrument.type, instrument.symbol);
+  const pnl = (tradeData.type !== 0 && tradeData.entry > 0) ? (tradeData.type === 1 ? (currentPrice - tradeData.entry) : (tradeData.entry - currentPrice)) / tradeData.entry * 100 : null;
 
   return (
-    <div className={`flex items-center justify-between p-3 rounded-2xl border bg-white/[0.03] border-white/5`}>
-      <div className="flex flex-col w-1/4">
-        <div className="flex items-center space-x-2">
-          <span className="font-mono font-bold text-white text-lg">{instrument.symbol}</span>
-          {isFresh && <span className="px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black animate-pulse">NOW</span>}
-          <button onClick={() => onOpenChart?.(instrument.symbol)} className="p-1.5 hover:bg-emerald-500/20 rounded-lg">📈</button>
+    <div className={`flex flex-col gap-2 p-3 rounded-2xl border bg-white/[0.03] border-white/5 transition-all duration-500 ${isChartOpen ? 'ring-2 ring-sky-500/50 bg-sky-500/5' : ''}`}>
+      <div className="flex flex-row items-center justify-between w-full">
+        {/* COLUMNA STATUS */}
+        <div className="w-24 flex justify-center">
+            <div className={`h-2 w-2 rounded-full ${isLoading ? 'bg-amber-500 animate-pulse' : (isMarketOpen(instrument.type, instrument.symbol) ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-neutral-700')}`} />
+        </div>
+
+        {/* COLUMNA INSTRUMENT */}
+        <div className="w-1/4 flex flex-col">
+          <div className="flex items-center space-x-2">
+            <span className="font-mono font-bold text-white text-lg">{instrument.symbol}</span>
+            {isFresh && <span className="px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black animate-pulse">NOW</span>}
+            <button onClick={() => onOpenChart?.(instrument.symbol)} className="p-1.5 hover:bg-white/10 rounded-lg text-neutral-500 hover:text-sky-400 transition-colors">📈</button>
+          </div>
+          <span className="text-[9px] text-neutral-500 uppercase tracking-widest">{instrument.name}</span>
+        </div>
+
+        {/* COLUMNA MTF (RESTAURADA) */}
+        <div className="w-1/3 flex justify-center space-x-6">
+          {(['4h', '1h', '15min', '5min'] as Timeframe[]).map(tf => (
+            <div key={tf} className="flex flex-col items-center">
+              <span className="text-[7px] text-neutral-500 font-bold mb-1 uppercase">{tf}</span>
+              <div className={`h-1.5 w-8 rounded-full ${getSignalDotColor(tf)}`} />
+            </div>
+          ))}
+        </div>
+
+        {/* COLUMNA SCORE (RESTAURADA) */}
+        <div className="w-1/6 text-center">
+          <span className={`text-xl font-black font-mono ${analysis?.powerScore && analysis.powerScore >= 85 ? 'text-emerald-400' : 'text-neutral-500'}`}>{analysis?.powerScore || 0}</span>
+        </div>
+
+        {/* COLUMNA SESSION (RESTAURADA) */}
+        <div className="w-40 text-center text-[10px] font-bold text-neutral-500 uppercase">
+          {isMarketOpen(instrument.type, instrument.symbol) ? <span className="text-emerald-500/60">Abierto</span> : 'Cerrado'}
+        </div>
+
+        {/* COLUMNA ACCIÓN (RESTAURADA) */}
+        <div className={`px-4 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest min-w-[140px] text-center ${getActionColor(analysis?.action, analysis?.powerScore)}`}>
+          {isLoading ? 'Scanning...' : (analysis?.action === ActionType.ENTRAR_AHORA && analysis?.powerScore >= 85 ? (analysis.mainSignal === SignalType.SALE ? 'VENDER' : 'COMPRAR') : (analysis?.action || 'STANDBY'))}
+        </div>
+
+        {/* COLUMNA TRADE TRACKER (MIS TRADES) */}
+        <div className="w-[180px] flex items-center justify-end pl-4 border-l border-white/5 space-x-3">
+          {tradeData.type !== 0 && (
+            <div className="flex flex-col items-end">
+                <span className={`text-[11px] font-black font-mono ${pnl && pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{pnl?.toFixed(2)}%</span>
+                <span className="text-[8px] text-neutral-500 font-bold tracking-tighter">In: ${tradeData.entry.toLocaleString()}</span>
+            </div>
+          )}
+          <button onClick={cycleTradeMarker} className={`w-10 h-10 rounded-xl border transition-all flex items-center justify-center ${tradeData.type === 1 ? 'bg-emerald-500 text-black' : tradeData.type === 2 ? 'bg-rose-500 text-black' : 'bg-white/5 text-neutral-700'}`}>
+            {tradeData.type === 0 ? '+' : tradeData.type === 1 ? '▲' : '▼'}
+          </button>
         </div>
       </div>
 
-      {/* SECCIÓN SCORE Y ACCIÓN OMITIDA POR BREVEDAD - MANTÉN TU ORIGINAL */}
-
-      {/* TRADE TRACKER COLUMNA */}
-      <div className="flex items-center ml-8 pl-6 border-l border-white/5 min-w-[180px]">
-        <button onClick={cycleTradeMarker} className={`w-12 h-12 rounded-2xl border transition-all ${tradeData.type === 1 ? 'bg-emerald-500 text-black' : tradeData.type === 2 ? 'bg-rose-500 text-black' : 'bg-white/5'}`}>
-          {tradeData.type === 0 ? '+' : tradeData.type === 1 ? '▲' : '▼'}
-        </button>
-        {tradeData.type !== 0 && (
-          <div className="flex flex-col ml-3">
-            <span className={`text-sm font-black ${pnl && pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{pnl?.toFixed(2)}%</span>
-            <span className="text-[10px] text-white font-bold">In: ${tradeData.entry.toLocaleString()}</span>
-          </div>
-        )}
-      </div>
+      {/* MINIATURA SI EL GRÁFICO ESTÁ ABIERTO */}
+      {isChartOpen && (
+        <div className="w-full h-40 mt-2 bg-black/40 rounded-xl border border-sky-500/20 overflow-hidden relative group">
+            <div className="absolute inset-0 flex items-center justify-center text-[10px] text-sky-500/30 font-black tracking-widest uppercase">Gráfico activo arriba</div>
+            {/* Aquí no renderizamos otro iframe para no saturar, indicamos que está abierto */}
+        </div>
+      )}
     </div>
   );
 };
