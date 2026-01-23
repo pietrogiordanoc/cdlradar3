@@ -182,7 +182,17 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
               <div className="flex items-center space-x-2">
                 <span className="font-mono font-bold text-white text-lg tracking-tight">{instrument.symbol}</span>
                 {isFresh && <span className="px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black animate-pulse">NOW</span>}
-                <button onClick={() => onOpenChart?.(instrument.symbol)} className="p-1.5 hover:bg-white/10 rounded-lg text-neutral-500 hover:text-sky-400 transition-colors">📈</button>
+                {/* BOTÓN DE GRÁFICO CON ESTADO DE MEMORIA */}
+                <button 
+                  onClick={() => onOpenChart?.(instrument.symbol)} 
+                  className={`p-1.5 rounded-lg transition-all duration-300 border
+                    ${isChartOpen 
+                      ? 'bg-sky-500/20 border-sky-500/50 text-sky-400 shadow-[0_0_10px_rgba(14,165,233,0.3)]' 
+                      : 'bg-white/5 border-white/5 text-neutral-500 hover:border-white/10 hover:text-sky-400'}`}
+                  title={isChartOpen ? "Ver análisis guardado" : "Abrir gráfico"}
+                >
+                  📈
+                </button>
               </div>
               <span className="text-[9px] text-neutral-500 uppercase tracking-widest leading-none">{instrument.name}</span>
             </div>
