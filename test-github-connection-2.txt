@@ -1,0 +1,2 @@
+# Test de conexión desde la carpeta correcta
+Este archivo confirma que el push se realiza correctamente desde la carpeta del proyecto con git inicializado.

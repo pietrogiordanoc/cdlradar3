@@ -16,6 +16,20 @@ interface InstrumentRowProps {
 const InstrumentRow: React.FC<InstrumentRowProps> = ({ 
   instrument, globalRefreshTrigger, strategy, onAnalysisUpdate, onOpenChart, isChartOpen
 }) => {
+  // --- FUNCIÓN DE AUDIO RECUPERADA ---
+  const playAlertSound = useCallback((type: 'entry' | 'exit') => {
+    try {
+      const vol = parseFloat(localStorage.getItem('alertVolume') || '0.5');
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.setValueAtTime(type === 'entry' ? 440 : 660, audioCtx.currentTime);
+      osc.frequency.linearRampToValueAtTime(type === 'entry' ? 880 : 330, audioCtx.currentTime + 0.2);
+      gain.gain.setValueAtTime(vol * 0.1, audioCtx.currentTime);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+    } catch (e) {}
+  }, []);
   const [isFresh, setIsFresh] = useState(false);
   const [analysis, setAnalysis] = useState<MultiTimeframeAnalysis | null>(() => GlobalAnalysisCache[instrument.id]?.analysis || null);
   const [isLoading, setIsLoading] = useState(false);
@@ -160,13 +174,8 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
                     {/* BOTÓN DE GRÁFICO (ÚNICO ELEMENTO QUE CAMBIA DE COLOR) */}
                     <button 
                       onClick={() => onOpenChart?.(instrument.symbol)} 
-                      className={`p-1.5 rounded-lg transition-all duration-300 border flex items-center justify-center
-                        ${isChartOpen 
-                          ? 'bg-sky-500 border-sky-400 text-white shadow-[0_0_15px_rgba(14,165,233,0.6)]' 
-                          : 'bg-white/5 border-white/5 text-neutral-500 hover:text-sky-400'}`}
-                    >
-                      📈
-                    </button>
+                      className={`p-1.5 rounded-lg transition-colors border flex items-center justify-center ${isChartOpen ? 'bg-sky-500/20 border-sky-500/50 text-sky-400' : 'bg-white/5 border-white/5 text-neutral-500 hover:text-sky-400'}`}
+                    >📈</button>
                   </div>
                   {currentPrice > 0 && <span className="text-[14px] font-mono text-white font-black">${currentPrice.toLocaleString()}</span>}
                 </div>
