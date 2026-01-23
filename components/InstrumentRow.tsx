@@ -115,40 +115,19 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         </div>
       </div>
 
-        {/* COLUMNA INSTRUMENT CON ICONOS REALES (QUIRÚRGICO) */}
+        {/* COLUMNA INSTRUMENT: ICONOS + PRECIO RECUPERADO (QUIRÚRGICO) */}
         <div className="w-1/4 flex flex-col">
           <div className="flex items-center space-x-3">
-            {/* ICONOS DE GRADO PROFESIONAL (MODO QUIRÚRGICO) */}
+            {/* Contenedor de Iconos (Mantiene lingotes, banderas, etc.) */}
             <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden bg-[#0a0b0e] border border-white/5 flex items-center justify-center">
               {(() => {
                 const sym = instrument.symbol.toUpperCase().replace('/', '');
-                
-                // 1. COMMODITIES (LINGOTES Y GOTA)
-                if (sym.includes('XAU') || sym.includes('GOLD')) {
-                  return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#FFB100"><path d="M2 22h20v-2H2v2zm3-4h6v-2H5v2zm8 0h6v-2h-6v2zM2 16h9v-2H2v2zm11 0h9v-2h-9v2zM5 10h6V8H5v2zm8 0h6V8h-6v2zM2 8h9V6H2v2zm11 0h9V6h-9v2z"/></svg>;
-                }
-                if (sym.includes('XAG') || sym.includes('SILVER')) {
-                  return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#A6A9B6"><path d="M2 22h20v-2H2v2zm3-4h6v-2H5v2zm8 0h6v-2h-6v2zM2 16h9v-2H2v2zm11 0h9v-2h-9v2zM5 10h6V8H5v2zm8 0h6V8h-6v2zM2 8h9V6H2v2zm11 0h9V6h-9v2z"/></svg>;
-                }
-                if (sym.includes('OIL') || sym.includes('WTI')) {
-                  return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#E5E7EB"><path fillRule="evenodd" d="M12 2.25c-.24 0-.47.1-.64.28L6.44 7.64c-2.14 2.14-3.19 4.96-3.19 7.76 0 4.8 3.84 8.7 8.75 8.7s8.75-3.9 8.75-8.7c0-2.8-1.05-5.62-3.19-7.76l-4.92-5.11c-.17-.18-.4-.28-.64-.28zM12 21c-3.17 0-5.75-2.58-5.75-5.6 0-1.93.75-3.8 2.14-5.18L12 6.13l3.61 3.79c1.39 1.38 2.14 3.25 2.14 5.18 0 3.02-2.58 5.6-5.75 5.6z" fill="#000" stroke="#fff" strokeWidth="0.5"/></svg>;
-                }
-
-                // 2. ÍNDICES (CÍRCULOS CON NÚMEROS ESTILO TV)
-                if (sym.includes('500') || sym.includes('SPX')) {
-                  return <div className="w-full h-full bg-[#FF0000] flex items-center justify-center text-[10px] font-bold text-white">500</div>;
-                }
-                if (sym.includes('30') || sym.includes('DJI')) {
-                  return <div className="w-full h-full bg-[#0052FF] flex items-center justify-center text-[10px] font-bold text-white">30</div>;
-                }
-                if (sym.includes('100') || sym.includes('NDX') || sym.includes('IXIC')) {
-                  return <div className="w-full h-full bg-[#00BCD4] flex items-center justify-center text-[10px] font-bold text-white">100</div>;
-                }
-                if (sym.includes('40') || sym.includes('DAX')) {
-                  return <div className="w-full h-full bg-[#1F39AD] flex items-center justify-center text-[10px] font-bold text-white">40</div>;
-                }
-
-                // 3. FOREX (BANDERAS)
+                if (sym.includes('XAU') || sym.includes('GOLD')) return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#FFB100"><path d="M2 22h20v-2H2v2zm3-4h6v-2H5v2zm8 0h6v-2h-6v2zM2 16h9v-2H2v2zm11 0h9v-2h-9v2zM5 10h6V8H5v2zm8 0h6V8h-6v2zM2 8h9V6H2v2zm11 0h9V6h-9v2z"/></svg>;
+                if (sym.includes('XAG') || sym.includes('SILVER')) return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#A6A9B6"><path d="M2 22h20v-2H2v2zm3-4h6v-2H5v2zm8 0h6v-2h-6v2zM2 16h9v-2H2v2zm11 0h9v-2h-9v2zM5 10h6V8H5v2zm8 0h6V8h-6v2zM2 8h9V6H2v2zm11 0h9V6h-9v2z"/></svg>;
+                if (sym.includes('OIL') || sym.includes('WTI')) return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#000"><path d="M12 2.25L6.44 7.64c-2.14 2.14-3.19 4.96-3.19 7.76 0 4.8 3.84 8.7 8.75 8.7s8.75-3.9 8.75-8.7c0-2.8-1.05-5.62-3.19-7.76l-4.92-5.11z" stroke="#fff" strokeWidth="0.5"/></svg>;
+                if (sym.includes('500') || sym.includes('SPX')) return <div className="w-full h-full bg-[#FF0000] flex items-center justify-center text-[10px] font-bold text-white">500</div>;
+                if (sym.includes('30') || sym.includes('DJI')) return <div className="w-full h-full bg-[#0052FF] flex items-center justify-center text-[10px] font-bold text-white">30</div>;
+                if (sym.includes('100') || sym.includes('NDX')) return <div className="w-full h-full bg-[#00BCD4] flex items-center justify-center text-[10px] font-bold text-white">100</div>;
                 if (instrument.type === 'forex' && instrument.symbol.includes('/')) {
                   const parts = instrument.symbol.split('/');
                   return (
@@ -158,43 +137,37 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
                     </div>
                   );
                 }
-
-                // 4. FALLBACK (LOGOS DE TV O INICIAL)
-                return (
-                  <img 
-                    src={instrument.type === 'crypto' 
-                      ? `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${sym.substring(0,3).toLowerCase()}.png`
-                      : `https://s3-symbol-logo.tradingview.com/${sym}.svg`
-                    } 
-                    className="w-full h-full object-contain p-1"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      const parent = e.currentTarget.parentElement;
-                      if (parent) parent.innerHTML = `<span class=\"text-[10px] font-bold text-neutral-500\">${sym.charAt(0)}</span>`;
-                    }}
-                    alt=""
-                  />
-                );
+                return <img src={instrument.type === 'crypto' ? `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${sym.substring(0,3).toLowerCase()}.png` : `https://s3-symbol-logo.tradingview.com/${sym}.svg`} className="w-full h-full object-contain p-1" onError={(e) => { e.currentTarget.style.display='none'; if(e.currentTarget.parentElement) e.currentTarget.parentElement.innerHTML=`<span class=\"text-[10px] font-bold text-neutral-500\">${sym.charAt(0)}</span>`; }} alt="" />;
               })()}
             </div>
 
-            <div className="flex flex-col">
-              <div className="flex items-center space-x-2">
-                <span className="font-mono font-bold text-white text-lg tracking-tight">{instrument.symbol}</span>
-                {isFresh && <span className="px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black animate-pulse">NOW</span>}
-                {/* BOTÓN DE GRÁFICO CON ESTADO DE MEMORIA */}
-                <button 
-                  onClick={() => onOpenChart?.(instrument.symbol)} 
-                  className={`p-1.5 rounded-lg transition-all duration-300 border
-                    ${isChartOpen 
-                      ? 'bg-sky-500/20 border-sky-500/50 text-sky-400 shadow-[0_0_10px_rgba(14,165,233,0.3)]' 
-                      : 'bg-white/5 border-white/5 text-neutral-500 hover:border-white/10 hover:text-sky-400'}`}
-                  title={isChartOpen ? "Ver análisis guardado" : "Abrir gráfico"}
-                >
-                  📈
-                </button>
+            {/* SYMBOL INFO + PRECIO (EL PRECIO HA VUELTO) */}
+            <div className="flex flex-col flex-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="font-mono font-bold text-white text-lg tracking-tight">{instrument.symbol}</span>
+                  {isFresh && <span className="px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black animate-pulse">NOW</span>}
+                  
+                  {/* Botón de Gráfico con Estado */}
+                  <button 
+                    onClick={() => onOpenChart?.(instrument.symbol)} 
+                    className={`p-1.5 rounded-lg transition-all duration-300 border
+                      ${isChartOpen 
+                        ? 'bg-sky-500/20 border-sky-500/50 text-sky-400 shadow-[0_0_10px_rgba(14,165,233,0.3)]' 
+                        : 'bg-white/5 border-white/5 text-neutral-500 hover:text-sky-400'}`}
+                  >
+                    📈
+                  </button>
+                </div>
+
+                {/* EL PRECIO ESTÁ AQUÍ OTRA VEZ */}
+                {currentPrice > 0 && (
+                  <span className="text-[14px] font-mono text-white font-black tracking-tighter">
+                    ${currentPrice.toLocaleString()}
+                  </span>
+                )}
               </div>
-              <span className="text-[9px] text-neutral-500 uppercase tracking-widest leading-none">{instrument.name}</span>
+              <span className="text-[9px] text-neutral-500 uppercase tracking-widest leading-none mt-0.5">{instrument.name}</span>
             </div>
           </div>
         </div>
