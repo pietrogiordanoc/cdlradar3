@@ -9,13 +9,38 @@ const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose }) 
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let tvSymbol = symbol.replace('/', '');
-    if (symbol.includes('/')) {
-      tvSymbol = `FX:${tvSymbol}`;
-    } else if (['SPX', 'IXIC', 'DJI', 'NDX'].includes(symbol)) {
-      tvSymbol = `CAPITALCOM:${symbol}`;
+    // 1. Limpieza y preparación
+    const pureSymbol = symbol.replace('/', '').toUpperCase();
+    let tvSymbol = pureSymbol;
+
+    // 2. DICCIONARIO DE TRADUCCIÓN (Corrección Quirúrgica para Índices)
+    const indexMapping: Record<string, string> = {
+      'SPX': 'CAPITALCOM:US500',    // S&P 500
+      'IXIC': 'CAPITALCOM:US100',   // Nasdaq Composite (usamos el US100 para datos en vivo)
+      'NDX': 'CAPITALCOM:US100',    // Nasdaq 100
+      'DJI': 'CAPITALCOM:US30',     // Dow Jones
+      'DAX': 'CAPITALCOM:DE40',     // DAX Alemán (DE40 es el estándar actual)
+      'GER40': 'CAPITALCOM:DE40',
+      'UK100': 'CAPITALCOM:UK100',
+      'XAUUSD': 'OANDA:XAUUSD',     // Oro
+      'XAGUSD': 'OANDA:XAGUSD'      // Plata
+    };
+
+    // 3. APLICAR LÓGICA DE PROVEEDOR
+    if (indexMapping[pureSymbol]) {
+      // Si el símbolo está en nuestro diccionario de "traducción", lo usamos
+      tvSymbol = indexMapping[pureSymbol];
+    } 
+    else if (symbol.includes('/')) {
+      // Para pares de Forex normales
+      tvSymbol = `FX:${pureSymbol}`;
+    }
+    else if (typeof instrument !== 'undefined' && instrument?.type === 'crypto') {
+      // Para Criptos
+      tvSymbol = `BINANCE:${pureSymbol}`;
     }
 
+    // 4. Inyección del Script (el resto del código se mantiene igual)
     const script = document.createElement('script');
     script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
     script.type = 'text/javascript';
