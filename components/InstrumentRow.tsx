@@ -164,17 +164,17 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
                 <div className="flex items-center space-x-2">
                   <span className="font-mono font-bold text-white text-lg tracking-tight">{instrument.symbol}</span>
                   {isFresh && <span className="px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black animate-pulse">NOW</span>}
-                  {/* BOTÓN DE GRÁFICO CON ESTADO ACTIVO (COLOR SKY) */}
-                  <button 
-                    onClick={() => onOpenChart?.(instrument.symbol)} 
-                    className={`p-1.5 rounded-lg transition-all duration-300 border flex items-center justify-center
-                      ${isChartOpen 
-                        ? 'bg-sky-500/20 border-sky-500/60 text-sky-400 shadow-[0_0_15px_rgba(14,165,233,0.4)] ring-1 ring-sky-400/50' 
-                        : 'bg-white/5 border-white/5 text-neutral-500 hover:border-white/10 hover:text-sky-400'}`}
-                    title={isChartOpen ? "Análisis activo (clic para expandir)" : "Abrir gráfico"}
-                  >
-                    <span className={isChartOpen ? "animate-pulse" : ""}>📈</span>
-                  </button>
+                  {/* BOTÓN DE GRÁFICO CON COLOR SKY INTENSO CUANDO ESTÁ ACTIVO */}
+            <button 
+              onClick={() => onOpenChart?.(instrument.symbol)} 
+              className={`p-1.5 rounded-lg transition-all duration-300 border flex items-center justify-center
+                ${isChartOpen 
+                  ? 'bg-sky-500 border-sky-400 text-white shadow-[0_0_20px_rgba(14,165,233,0.6)] ring-2 ring-sky-400/50' 
+                  : 'bg-white/5 border-white/5 text-neutral-500 hover:border-white/10 hover:text-sky-400'}`}
+              title={isChartOpen ? "Análisis en memoria - Clic para ver" : "Abrir gráfico"}
+            >
+              <span className={isChartOpen ? "brightness-125" : ""}>📈</span>
+            </button>
                 </div>
 
                 {/* EL PRECIO ESTÁ AQUÍ OTRA VEZ */}
