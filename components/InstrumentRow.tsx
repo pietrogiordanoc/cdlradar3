@@ -1,3 +1,11 @@
+  // Helper para texto de acción
+  const getActionText = (action?: ActionType, score: number = 0, mainSignal?: SignalType) => {
+    if (action === ActionType.ENTRAR_AHORA && score >= 85) {
+      return mainSignal === SignalType.SALE ? 'VENDER' : 'COMPRAR';
+    }
+    if (action === ActionType.MERCADO_CERRADO) return '🔒 CERRADO';
+    return action || 'STANDBY';
+  };
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Instrument, MultiTimeframeAnalysis, SignalType, ActionType, Timeframe, Strategy, Candlestick } from '../types';
 import { fetchTimeSeries, PriceStore, resampleCandles, isMarketOpen } from '../services/twelveDataService';
@@ -136,25 +144,41 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
 
         {/* COLUMNA TRADE TRACKER (MIS TRADES) */}
         <div className="w-[180px] flex items-center justify-end pl-4 border-l border-white/5 space-x-3">
-          {tradeData.type !== 0 && (
-            <div className="flex flex-col items-end">
-                <span className={`text-[11px] font-black font-mono ${pnl && pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{pnl?.toFixed(2)}%</span>
-                <span className="text-[8px] text-neutral-500 font-bold tracking-tighter">In: ${tradeData.entry.toLocaleString()}</span>
-            </div>
-          )}
-          <button onClick={cycleTradeMarker} className={`w-10 h-10 rounded-xl border transition-all flex items-center justify-center ${tradeData.type === 1 ? 'bg-emerald-500 text-black' : tradeData.type === 2 ? 'bg-rose-500 text-black' : 'bg-white/5 text-neutral-700'}`}>
-            {tradeData.type === 0 ? '+' : tradeData.type === 1 ? '▲' : '▼'}
-          </button>
+            {tradeData.type !== 0 && (
+              <div className="flex flex-col items-end space-y-1">
+                  <div className={`text-[11px] font-black font-mono px-2 py-0.5 rounded ${pnl && pnl >= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`}>
+                    {pnl && pnl >= 0 ? '+' : ''}{pnl?.toFixed(2)}%
+                  </div>
+                  <div className="flex flex-col items-end leading-none">
+                    <span className="text-[9px] text-white font-bold">In: ${tradeData.entry.toLocaleString()}</span>
+                    <span className="text-[8px] text-emerald-500/50 font-bold">TP: ${(tradeData.entry * (tradeData.type === 1 ? 1.01 : 0.99)).toLocaleString()}</span>
+                  </div>
+              </div>
+            )}
+            <button 
+              onClick={cycleTradeMarker} 
+              className={`w-12 h-12 rounded-2xl border transition-all flex items-center justify-center
+                ${tradeData.type === 1 ? 'bg-emerald-500 border-emerald-400 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 
+                  tradeData.type === 2 ? 'bg-rose-500 border-rose-400 text-black shadow-[0_0_15px rgba(244,63,94,0.4)]' : 
+                  'bg-white/5 border-white/10 text-neutral-800'}`}
+            >
+              {tradeData.type === 0 ? <span className="text-xl opacity-20">+</span> : 
+               tradeData.type === 1 ? <span className="text-2xl">▲</span> : <span className="text-2xl">▼</span>}
+            </button>
         </div>
       </div>
 
       {/* MINIATURA SI EL GRÁFICO ESTÁ ABIERTO */}
-      {isChartOpen && (
-        <div className="w-full h-40 mt-2 bg-black/40 rounded-xl border border-sky-500/20 overflow-hidden relative group">
-            <div className="absolute inset-0 flex items-center justify-center text-[10px] text-sky-500/30 font-black tracking-widest uppercase">Gráfico activo arriba</div>
-            {/* Aquí no renderizamos otro iframe para no saturar, indicamos que está abierto */}
-        </div>
-      )}
+        {isChartOpen && (
+          <div className="w-full h-48 mt-2 bg-black/60 rounded-2xl border border-sky-500/30 overflow-hidden relative group">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-sky-500 font-black tracking-[.3em] uppercase animate-pulse">Gráfico Activo</span>
+                <span className="text-[8px] text-sky-500/40 uppercase mt-1 text-center">Toca el icono 📈 para volver al modo pantalla completa</span>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 };
