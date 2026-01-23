@@ -278,27 +278,38 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         ) : getActionText(analysis?.action, analysis?.powerScore, analysis?.mainSignal)}
       </div>
 
-      {/* --- NUEVA COLUMNA: TRADE TRACKER --- */}
-      <div className="flex items-center ml-10 pl-6 border-l border-white/5 min-w-[140px]">
+      {/* --- COLUMNA TRADE TRACKER MEJORADA (MÁS LEGIBLE) --- */}
+      <div className="flex items-center ml-8 pl-6 border-l border-white/5 min-w-[180px]">
+        {/* Botón de Acción con Icono más grande */}
         <button 
           onClick={cycleTradeMarker}
-          className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 border mr-4
-            ${tradeData.type === 1 ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 
-              tradeData.type === 2 ? 'bg-rose-500/20 border-rose-500/50 text-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 
-              'bg-white/5 border-white/5 text-neutral-800 hover:text-neutral-600'}`}
+          className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 border mr-5
+            ${tradeData.type === 1 ? 'bg-emerald-500 border-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 
+              tradeData.type === 2 ? 'bg-rose-500 border-rose-400 text-black shadow-[0_0_20px_rgba(244,63,94,0.4)]' : 
+              'bg-white/5 border-white/10 text-neutral-700 hover:text-neutral-400 hover:bg-white/10'}`}
         >
-          {tradeData.type === 0 ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M12 4.5v15m7.5-7.5h-15" /></svg> : 
-           tradeData.type === 1 ? <svg className="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z" /></svg> : 
-                                  <svg className="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l8-8h-5v-8h-6v8h-5z" /></svg>}
+          {tradeData.type === 0 ? <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M12 4.5v15m7.5-7.5h-15" /></svg> : 
+           tradeData.type === 1 ? <svg className="w-8 h-8 animate-bounce" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z" /></svg> : 
+                                  <svg className="w-8 h-8 animate-bounce" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l8-8h-5v-8h-6v8h-5z" /></svg>}
         </button>
 
+        {/* Bloque de Información con Jerarquía Visual */}
         {tradeData.type !== 0 && (
-          <div className="flex flex-col">
-            <span className={`text-[11px] font-mono font-black ${pnl && pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {pnl && pnl >= 0 ? '+' : ''}{pnl?.toFixed(2)}%
-            </span>
-            <span className="text-[7px] text-neutral-600 font-bold uppercase tracking-widest">Entry: ${tradeData.entry.toLocaleString()}</span>
-            <span className="text-[7px] text-emerald-500/40 font-bold">TP (1%): ${(tradeData.entry * (tradeData.type === 1 ? 1.01 : 0.99)).toLocaleString()}</span>
+          <div className="flex flex-col space-y-1">
+            {/* P&L con fondo para resaltar */}
+            <div className={`text-sm font-mono font-black px-2 py-0.5 rounded-md w-fit ${pnl && pnl > 0 ? 'text-emerald-400 bg-emerald-500/10' : pnl && pnl < 0 ? 'text-rose-400 bg-rose-500/10' : 'text-neutral-400 bg-white/5'}`}>
+              {pnl && pnl > 0 ? '+' : ''}{pnl?.toFixed(2)}%
+            </div>
+            {/* Entry Price con Label */}
+            <div className="flex items-center space-x-1">
+              <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-tighter">In:</span>
+              <span className="text-[11px] font-mono font-bold text-white">${tradeData.entry.toLocaleString()}</span>
+            </div>
+            {/* TP con color distintivo */}
+            <div className="flex items-center space-x-1">
+              <span className="text-[9px] text-emerald-500/50 font-bold uppercase tracking-tighter">TP:</span>
+              <span className="text-[11px] font-mono font-bold text-emerald-500/80">${(tradeData.entry * (tradeData.type === 1 ? 1.01 : 0.99)).toLocaleString()}</span>
+            </div>
           </div>
         )}
       </div>
