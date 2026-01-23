@@ -1,11 +1,3 @@
-  // Helper para texto de acción
-  const getActionText = (action?: ActionType, score: number = 0, mainSignal?: SignalType) => {
-    if (action === ActionType.ENTRAR_AHORA && score >= 85) {
-      return mainSignal === SignalType.SALE ? 'VENDER' : 'COMPRAR';
-    }
-    if (action === ActionType.MERCADO_CERRADO) return '🔒 CERRADO';
-    return action || 'STANDBY';
-  };
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Instrument, MultiTimeframeAnalysis, SignalType, ActionType, Timeframe, Strategy, Candlestick } from '../types';
 import { fetchTimeSeries, PriceStore, resampleCandles, isMarketOpen } from '../services/twelveDataService';
@@ -91,6 +83,13 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
   }, [analysis]);
 
   // UI HELPERS (RESTAURADOS)
+  const getActionText = (action?: ActionType, score: number = 0, mainSignal?: SignalType) => {
+    if (action === ActionType.ENTRAR_AHORA && score >= 85) {
+      return mainSignal === SignalType.SALE ? 'VENDER' : 'COMPRAR';
+    }
+    if (action === ActionType.MERCADO_CERRADO) return '🔒 CERRADO';
+    return action || 'STANDBY';
+  };
   const getActionColor = (action?: ActionType, score: number = 0) => {
     if (action === ActionType.ENTRAR_AHORA && score >= 85) return 'text-emerald-400 bg-emerald-500/20 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]';
     if (action === ActionType.SALIR) return 'text-rose-400 bg-rose-500/20 border-rose-400';
@@ -214,10 +213,9 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
           </div>
         </div>
 
-        // CAMBIO QUIRÚRGICO: El bloque de miniatura negra ha sido eliminado. Solo el icono 📈 cambia de color.
+        {/* CAMBIO QUIRÚRGICO: El bloque de miniatura negra ha sido eliminado. Solo el icono 📈 cambia de color. */}
       </div>
     );
-  );
 };
 
 export default memo(InstrumentRow);
