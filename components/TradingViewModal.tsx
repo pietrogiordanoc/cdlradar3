@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 
 interface TradingViewModalProps {
@@ -32,6 +31,9 @@ const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose }) 
       "locale": "en",
       "enable_publishing": false,
       "allow_symbol_change": false,
+      "hide_side_toolbar": false, // CAMBIO QUIRÚRGICO: Habilita herramientas de dibujo
+      "withdateranges": true,      // CAMBIO QUIRÚRGICO: Habilita rango de fechas inferior
+      "save_image": true,          // CAMBIO QUIRÚRGICO: Permite guardar capturas
       "calendar": false,
       "support_host": "https://www.tradingview.com"
     });
@@ -44,7 +46,8 @@ const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose }) 
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-      <div className="relative w-full max-w-6xl h-[80vh] bg-[#0f0f0f] border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+      {/* CAMBIO QUIRÚRGICO: max-w-[95vw] y h-[92vh] para aumentar el tamaño significativamente */}
+      <div className="relative w-full max-w-[95vw] h-[92vh] bg-[#0f0f0f] border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
           <div className="flex items-center space-x-3">
             <span className="text-xl font-black tracking-tighter text-white">{symbol}</span>
@@ -59,7 +62,8 @@ const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose }) 
             </svg>
           </button>
         </div>
-        <div className="w-full h-full pb-14">
+        {/* Ajuste de padding inferior para que el gráfico use todo el espacio */}
+        <div className="w-full h-full pb-16">
           <div ref={containerRef} className="tradingview-widget-container" style={{ height: "100%", width: "100%" }}>
             <div className="tradingview-widget-container__widget"></div>
           </div>
