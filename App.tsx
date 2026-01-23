@@ -37,6 +37,7 @@ const App: React.FC = () => {
 
   const handleRefreshComplete = useCallback(() => {
     setRefreshTrigger(t => t + 1);
+    setSortConfig(null); // Esto obliga a la lista a volver al orden de Score por defecto
   }, []);
 
   const handleAnalysisUpdate = useCallback((id: string, data: MultiTimeframeAnalysis | null) => {
@@ -123,13 +124,18 @@ const App: React.FC = () => {
         if (valA > valB) return direction === 'asc' ? 1 : -1;
       }
 
-      // Default sort by score and entries
+      // Default sort by score (De mayor a menor)
+      const scoreA = analysisA?.powerScore || 0;
+      const scoreB = analysisB?.powerScore || 0;
+      if (scoreB !== scoreA) return scoreB - scoreA; // Primero el que tenga más score
+
+      // Si el score es igual, ponemos las entradas primero
       const isEntryA = analysisA?.action === ActionType.ENTRAR_AHORA;
       const isEntryB = analysisB?.action === ActionType.ENTRAR_AHORA;
       if (isEntryA && !isEntryB) return -1;
       if (!isEntryA && isEntryB) return 1;
       
-      return (analysisB?.powerScore || 0) - (analysisA?.powerScore || 0);
+      return 0;
     });
   }, [filter, actionFilter, searchQuery, sortConfig, refreshTrigger]);
 

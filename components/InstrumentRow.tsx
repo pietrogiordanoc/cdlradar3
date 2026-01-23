@@ -23,11 +23,20 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
   });
   const [isLoading, setIsLoading] = useState(false);
   const [currentPrice, setCurrentPrice] = useState<number>(0);
-  const [isBookmarked, setIsBookmarked] = useState(() => {
-    const saved = localStorage.getItem('bookmarks');
-    return saved ? JSON.parse(saved).includes(instrument.id) : false;
+  // --- CAMBIO QUIRÚRGICO: Trade Tracker de 3 estados ---
+  const [tradeMarker, setTradeMarker] = useState<number>(() => {
+    return parseInt(localStorage.getItem(`trade_marker_${instrument.id}`) || '0');
   });
-  
+
+  const cycleTradeMarker = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTradeMarker(prev => {
+      const nextState = (prev + 1) % 3; // Ciclo: 0 -> 1 -> 2 -> 0
+      localStorage.setItem(`trade_marker_${instrument.id}`, nextState.toString());
+      return nextState;
+    });
+  };
+
   const lastActionRef = useRef<ActionType | null>(null);
   const lastRefreshTriggerRef = useRef<number>(GlobalAnalysisCache[instrument.id]?.trigger ?? -1);
 
@@ -191,8 +200,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
 
   return (
     <div className={`flex flex-col md:flex-row items-center justify-between p-3 rounded-2xl border transition-all duration-500 
-      ${isBookmarked ? 'bg-emerald-500/10 border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.05)]' : 'bg-white/[0.03] border-white/5'}
-      hover:bg-white/[0.06] hover:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]`}>
+      bg-white/[0.03] border-white/5 hover:bg-white/[0.06] hover:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]`}>
       
       <div className="flex items-center justify-center w-24">
         <div 
@@ -246,6 +254,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         )}
       </div>
 
+      {/* SECCIÓN DE ACCIÓN (SISTEMA) */}
       <div className={`px-5 py-2 rounded-xl border text-[10px] font-black uppercase tracking-[0.25em] min-w-[150px] text-center transition-all duration-500 ${getActionColor(analysis?.action, analysis?.powerScore, analysis?.mainSignal)}`}>
         {isLoading ? (
           <div className="flex items-center justify-center space-x-2">
@@ -255,14 +264,35 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         ) : getActionText(analysis?.action, analysis?.powerScore, analysis?.mainSignal)}
       </div>
 
-      <div className="w-10 flex justify-center items-center">
+      {/* --- CAMBIO QUIRÚRGICO: COLUMNA DE TRADE TRACKER (MIS TRADES) --- */}
+      <div className="flex items-center ml-12 pl-6 border-l border-white/5 min-w-[80px]">
         <button 
-          onClick={toggleBookmark}
-          className={`transition-all duration-300 transform hover:scale-125 ${isBookmarked ? 'text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'text-neutral-800 hover:text-neutral-600'}`}
+          onClick={cycleTradeMarker}
+          className={`group relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 border
+            ${tradeMarker === 1 ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 
+              tradeMarker === 2 ? 'bg-rose-500/20 border-rose-500/50 text-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 
+              'bg-white/5 border-white/5 text-neutral-800 hover:border-white/10 hover:text-neutral-600'}`}
+          title={tradeMarker === 1 ? "Tengo Compra abierta" : tradeMarker === 2 ? "Tengo Venta abierta" : "Marcar mi Trade"}
         >
-          <svg className="w-6 h-6" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-          </svg>
+          {tradeMarker === 0 && (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+          )}
+          {tradeMarker === 1 && (
+            <svg className="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 4l-8 8h5v8h6v-8h5z" />
+            </svg>
+          )}
+          {tradeMarker === 2 && (
+            <svg className="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 20l8-8h-5v-8h-6v8h-5z" />
+            </svg>
+          )}
+          {/* Label flotante muy sutil para saber qué marcamos */}
+          <span className="absolute -bottom-6 text-[7px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            {tradeMarker === 0 ? "Sin Trade" : tradeMarker === 1 ? "Bought" : "Sold"}
+          </span>
         </button>
       </div>
     </div>
