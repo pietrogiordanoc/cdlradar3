@@ -142,29 +142,55 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
           {isLoading ? 'Scanning...' : (analysis?.action === ActionType.ENTRAR_AHORA && analysis?.powerScore >= 85 ? (analysis.mainSignal === SignalType.SALE ? 'VENDER' : 'COMPRAR') : (analysis?.action || 'STANDBY'))}
         </div>
 
-        {/* COLUMNA TRADE TRACKER (MIS TRADES) */}
-        <div className="w-[180px] flex items-center justify-end pl-4 border-l border-white/5 space-x-3">
-            {tradeData.type !== 0 && (
-              <div className="flex flex-col items-end space-y-1">
-                  <div className={`text-[11px] font-black font-mono px-2 py-0.5 rounded ${pnl && pnl >= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`}>
-                    {pnl && pnl >= 0 ? '+' : ''}{pnl?.toFixed(2)}%
+        {/* --- TRADE TRACKER RESTAURADO Y MEJORADO (DISEÑO PRO) --- */}
+        <div className="w-[200px] flex items-center justify-end pl-4 border-l border-white/5 space-x-4">
+          
+          {tradeData.type !== 0 && (
+            <div className="flex flex-col items-end space-y-1.5">
+                {/* Badge de Porcentaje con mejor legibilidad */}
+                <div className={`text-[12px] font-black font-mono px-2 py-0.5 rounded-md leading-none shadow-sm
+                  ${pnl && pnl >= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`}>
+                  {pnl && pnl >= 0 ? '+' : ''}{pnl?.toFixed(2)}%
+                </div>
+                
+                {/* Datos de Entrada y TP con mejor contraste */}
+                <div className="flex flex-col items-end gap-0.5">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-tighter">In:</span>
+                    <span className="text-[11px] font-mono font-bold text-white/90 tracking-tight">${tradeData.entry.toLocaleString()}</span>
                   </div>
-                  <div className="flex flex-col items-end leading-none">
-                    <span className="text-[9px] text-white font-bold">In: ${tradeData.entry.toLocaleString()}</span>
-                    <span className="text-[8px] text-emerald-500/50 font-bold">TP: ${(tradeData.entry * (tradeData.type === 1 ? 1.01 : 0.99)).toLocaleString()}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] text-emerald-500/40 font-bold uppercase tracking-tighter">TP:</span>
+                    <span className="text-[11px] font-mono font-bold text-emerald-500/70 tracking-tight">
+                      ${(tradeData.entry * (tradeData.type === 1 ? 1.01 : 0.99)).toLocaleString()}
+                    </span>
                   </div>
-              </div>
+                </div>
+            </div>
+          )}
+
+          {/* Botón de Marcador con Flecha Animada (SVG) */}
+          <button 
+            onClick={cycleTradeMarker} 
+            className={`w-12 h-12 rounded-2xl border-2 transition-all duration-300 flex items-center justify-center
+              ${tradeData.type === 1 ? 'bg-emerald-500 border-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.5)]' : 
+                tradeData.type === 2 ? 'bg-rose-500 border-rose-400 text-black shadow-[0_0_20px_rgba(244,63,94,0.5)]' : 
+                'bg-white/5 border-white/10 text-neutral-800 hover:text-neutral-500 hover:bg-white/10'}`}
+          >
+            {tradeData.type === 0 ? (
+              <svg className="w-5 h-5 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            ) : tradeData.type === 1 ? (
+              <svg className="w-8 h-8 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 4l-8 8h5v8h6v-8h5z" />
+              </svg>
+            ) : (
+              <svg className="w-8 h-8 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 20l8-8h-5v-8h-6v8h-5z" />
+              </svg>
             )}
-            <button 
-              onClick={cycleTradeMarker} 
-              className={`w-12 h-12 rounded-2xl border transition-all flex items-center justify-center
-                ${tradeData.type === 1 ? 'bg-emerald-500 border-emerald-400 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 
-                  tradeData.type === 2 ? 'bg-rose-500 border-rose-400 text-black shadow-[0_0_15px rgba(244,63,94,0.4)]' : 
-                  'bg-white/5 border-white/10 text-neutral-800'}`}
-            >
-              {tradeData.type === 0 ? <span className="text-xl opacity-20">+</span> : 
-               tradeData.type === 1 ? <span className="text-2xl">▲</span> : <span className="text-2xl">▼</span>}
-            </button>
+          </button>
         </div>
       </div>
 
