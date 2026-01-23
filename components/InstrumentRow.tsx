@@ -16,6 +16,7 @@ interface InstrumentRowProps {
 }
 
 const InstrumentRow: React.FC<InstrumentRowProps> = ({ 
+    const [isFresh, setIsFresh] = useState(false);
   instrument, isConnected, onToggleConnect, globalRefreshTrigger, strategy, onAnalysisUpdate, isTestMode = false, onOpenChart
 }) => {
   const [analysis, setAnalysis] = useState<MultiTimeframeAnalysis | null>(() => {
@@ -141,12 +142,17 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
 
         const result = strategy.analyze(instrument.symbol, combinedData as any, false, instrument);
         
+        // --- CAMBIO QUIRÚRGICO: Detectar si la señal es nueva ---
         if (result.action === ActionType.ENTRAR_AHORA && lastActionRef.current !== ActionType.ENTRAR_AHORA) {
           playAlertSound('entry');
+          setIsFresh(true);
         } else if (result.action === ActionType.SALIR && lastActionRef.current !== ActionType.SALIR) {
           playAlertSound('exit');
+          setIsFresh(true);
+        } else {
+          // Si el refresco ocurre y la señal es la misma que antes, el tag desaparece
+          setIsFresh(false); 
         }
-        
         lastActionRef.current = result.action;
         setAnalysis(result);
         GlobalAnalysisCache[instrument.id] = { analysis: result, trigger: globalRefreshTrigger };
@@ -227,7 +233,16 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
       <div className="flex flex-col w-full md:w-1/4">
         <div className="flex items-center space-x-2">
           <div className="flex flex-col">
-            <span className="font-mono font-bold text-white text-lg tracking-tight">{instrument.symbol}</span>
+            <div className="flex items-center space-x-2">
+              <span className="font-mono font-bold text-white text-lg tracking-tight">{instrument.symbol}</span>
+              {/* --- TAG "NOW" ELÉCTRICO --- */}
+              {isFresh && !isLoading && (
+                <span className="flex items-center px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black tracking-tighter animate-pulse shadow-[0_0_15px_rgba(14,165,233,0.6)]">
+                  <span className="w-1 h-1 bg-white rounded-full mr-1"></span>
+                  NOW
+                </span>
+              )}
+            </div>
             <span className="text-[9px] text-neutral-500 font-medium leading-none mt-0.5">{instrument.name}</span>
           </div>
           <button 
