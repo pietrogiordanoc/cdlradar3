@@ -16,9 +16,10 @@ interface InstrumentRowProps {
 }
 
 const InstrumentRow: React.FC<InstrumentRowProps> = ({ 
-    const [isFresh, setIsFresh] = useState(false);
   instrument, isConnected, onToggleConnect, globalRefreshTrigger, strategy, onAnalysisUpdate, isTestMode = false, onOpenChart
 }) => {
+  // EL HOOK DEBE IR AQUÍ (Dentro de las llaves, no en los paréntesis)
+  const [isFresh, setIsFresh] = useState(false);
   const [analysis, setAnalysis] = useState<MultiTimeframeAnalysis | null>(() => {
     return GlobalAnalysisCache[instrument.id]?.analysis || null;
   });
