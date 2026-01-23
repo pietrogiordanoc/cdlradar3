@@ -171,11 +171,17 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
                   <div className="flex items-center space-x-2">
                     <span className="font-mono font-bold text-white text-lg">{instrument.symbol}</span>
                     {isFresh && <span className="px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black animate-pulse">NOW</span>}
-                    {/* BOTÓN DE GRÁFICO (ÚNICO ELEMENTO QUE CAMBIA DE COLOR) */}
-                    <button 
-                      onClick={() => onOpenChart?.(instrument.symbol)} 
-                      className={`p-1.5 rounded-lg transition-colors border flex items-center justify-center ${isChartOpen ? 'bg-sky-500/20 border-sky-500/50 text-sky-400' : 'bg-white/5 border-white/5 text-neutral-500 hover:text-sky-400'}`}
-                    >📈</button>
+                    {/* BOTÓN DE GRÁFICO: SOLO CAMBIA EL COLOR SI ESTÁ ABIERTO */}
+                  <button 
+                    onClick={() => onOpenChart?.(instrument.symbol)} 
+                    className={`p-1.5 rounded-lg transition-colors duration-300 border flex items-center justify-center
+                      ${isChartOpen 
+                        ? 'bg-sky-500/20 border-sky-500/50 text-sky-400 shadow-[0_0_10px_rgba(14,165,233,0.3)]' 
+                        : 'bg-white/5 border-white/5 text-neutral-500 hover:text-sky-400'}`}
+                    title={isChartOpen ? "Análisis en memoria - Clic para ver" : "Abrir gráfico"}
+                  >
+                    📈
+                  </button>
                   </div>
                   {currentPrice > 0 && <span className="text-[14px] font-mono text-white font-black">${currentPrice.toLocaleString()}</span>}
                 </div>

@@ -288,20 +288,19 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* GESTIÓN DE GRÁFICOS MULTITAREA */}
+      {/* GESTIÓN DE GRÁFICOS: Se mantienen en memoria para no borrar dibujos */}
       {openCharts.map(sym => (
         <div key={sym} style={{ display: activeChart === sym ? 'block' : 'none' }}>
           <TradingViewModal 
             symbol={sym} 
-            onClose={() => setActiveChart(null)} // Minimizar
-            onTerminate={() => {
+            onClose={() => setActiveChart(null)} // Esto es MINIMIZAR
+            onTerminate={() => { // Esto es CERRAR definitivo
               setOpenCharts(prev => prev.filter(s => s !== sym));
-              setActiveChart(null);
+              if(activeChart === sym) setActiveChart(null);
             }}
           />
         </div>
       ))}
-
     </div>
   );
 };

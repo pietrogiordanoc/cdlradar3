@@ -88,29 +88,30 @@ const TradingViewModal: React.FC<TradingViewModalProps> = ({ symbol, onClose, on
         <div className="flex items-center justify-between px-8 py-5 border-b border-white/5 bg-white/[0.01]">
           <div className="flex items-center space-x-4">
             <span className="text-2xl font-black tracking-tighter text-white">{symbol}</span>
-            <div className="flex items-center px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse mr-2"></span>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Live Advanced Engine</span>
-            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">Live Advanced Engine</span>
           </div>
           
           <div className="flex items-center space-x-3">
-            {/* BOTÓN MINIMIZAR (Bajar al Tray) */}
+            {/* BOTÓN MINIMIZAR (Flecha abajo) */}
             <button 
               onClick={onClose}
-              className="p-2 hover:bg-white/10 rounded-xl text-neutral-400 hover:text-sky-400"
+              className="p-2 hover:bg-white/10 rounded-xl text-neutral-400 hover:text-sky-400 transition-colors"
               title="Minimizar (Mantiene dibujos)"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
 
-            {/* BOTÓN CERRAR TOTAL */}
+            {/* BOTÓN CERRAR (X) */}
             <button 
               onClick={onTerminate}
-              className="p-2 hover:bg-rose-500/20 rounded-xl text-neutral-400 hover:text-rose-500"
+              className="p-2 hover:bg-rose-500/20 rounded-xl text-neutral-400 hover:text-rose-500 transition-colors"
               title="Cerrar Gráfico (Borra dibujos)"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         </div>
