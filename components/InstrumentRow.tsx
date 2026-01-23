@@ -117,8 +117,8 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
   const pnl = (tradeData.type !== 0 && tradeData.entry > 0) ? (tradeData.type === 1 ? (currentPrice - tradeData.entry) : (tradeData.entry - currentPrice)) / tradeData.entry * 100 : null;
 
   return (
-      {/* CAMBIO QUIRÚRGICO: Eliminado el borde y fondo azul de la fila activa */}
       <div className="flex flex-col gap-2 p-3 rounded-2xl border bg-white/[0.03] border-white/5 hover:bg-white/[0.05] transition-all duration-300">
+        {/* CAMBIO QUIRÚRGICO: Eliminado el borde y fondo azul de la fila activa */}
         <div className="flex flex-row items-center justify-between w-full">
           {/* STATUS */}
           <div className="w-24 flex justify-center">
