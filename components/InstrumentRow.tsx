@@ -102,10 +102,18 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
   return (
     <div className={`flex flex-col gap-2 p-3 rounded-2xl border bg-white/[0.03] border-white/5 transition-all duration-500 ${isChartOpen ? 'ring-2 ring-sky-500/50 bg-sky-500/5' : ''}`}>
       <div className="flex flex-row items-center justify-between w-full">
-        {/* COLUMNA STATUS */}
-        <div className="w-24 flex justify-center">
-            <div className={`h-2 w-2 rounded-full ${isLoading ? 'bg-amber-500 animate-pulse' : (isMarketOpen(instrument.type, instrument.symbol) ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-neutral-700')}`} />
+        {/* --- RESTAURACIÓN QUIRÚRGICA: INDICADOR STATUS (SWITCH) --- */}
+      <div className="flex items-center justify-center w-24">
+        <div 
+          className="h-7 w-12 rounded-full transition-all duration-300 flex items-center p-1 bg-neutral-800 border border-white/5"
+        >
+          <div className={`h-5 w-5 rounded-full shadow-lg transition-all duration-500 
+            ${isLoading ? 'bg-amber-500 animate-pulse' : 
+            (!isMarketOpen(instrument.type, instrument.symbol) ? 'bg-neutral-600 translate-x-0' : 
+            'bg-emerald-500 translate-x-5 shadow-[0_0_10px_rgba(16,185,129,0.5)]')}`} 
+          />
         </div>
+      </div>
 
         {/* COLUMNA INSTRUMENT */}
         <div className="w-1/4 flex flex-col">
