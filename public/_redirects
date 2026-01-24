@@ -1,0 +1,1 @@
+/api/proxy/*  https://api.twelvedata.com/:splat  200

@@ -1,17 +1,21 @@
 
+// 1. PON TU LLAVE AQUÍ (Búscala en tus correos o en TwelveData)
+const TWELVE_DATA_API_KEY = "93f4a098dc4649c0aeb152ec9e3473da";
+
 import { Candlestick, Timeframe } from '../types';
 
 export const PriceStore: Record<string, number> = {};
 
-export const fetchTimeSeries = async (symbol: string, interval: Timeframe, outputSize: number = 1000): Promise<Candlestick[]> => {
+export const fetchTimeSeries = async (symbol: string, interval: Timeframe, outputSize: number = 5000): Promise<Candlestick[]> => {
   try {
-    // Ahora llamamos a nuestra propia ruta /api/proxy
-    // Esto oculta nuestra API KEY y permite que Vercel gestione el caché
-    const response = await fetch(`/api/proxy?symbol=${symbol}&interval=${interval}&outputsize=${outputSize}`);
+    // CAMBIO QUIRÚRGICO: Llamada directa a TwelveData para que funcione en Netlify
+    const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${interval}&outputsize=${outputSize}&apikey=${TWELVE_DATA_API_KEY}`;
+    
+    const response = await fetch(url);
     const data = await response.json();
     
     if (data.status === 'error') {
-      console.warn(`Error en Proxy (${symbol}):`, data.message);
+      console.warn(`Error TwelveData (${symbol}):`, data.message);
       return [];
     }
     
@@ -32,7 +36,7 @@ export const fetchTimeSeries = async (symbol: string, interval: Timeframe, outpu
 
     return candles;
   } catch (error) { 
-    console.error("Fetch error via Proxy:", error);
+    console.error("Fetch error:", error);
     return []; 
   }
 };

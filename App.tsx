@@ -86,60 +86,24 @@ const App: React.FC = () => {
     
     const currentAnalyses = analysesRef.current;
 
-    // Filtro por acción
-    if (actionFilter !== 'all') {
-      items = items.filter(i => {
-        const analysis = currentAnalyses[i.id];
-        if (actionFilter === 'entrar') return analysis?.action === ActionType.ENTRAR_AHORA;
-        if (actionFilter === 'salir') return analysis?.action === ActionType.SALIR;
-        if (actionFilter === 'esperar') return analysis?.action === ActionType.ESPERAR || analysis?.action === ActionType.NADA;
-        return true;
-      });
-    }
-
     return [...items].sort((a, b) => {
       const analysisA = currentAnalyses[a.id];
       const analysisB = currentAnalyses[b.id];
-
-      if (sortConfig) {
-        const { key, direction } = sortConfig;
-        let valA: any, valB: any;
-        
-        if (key === 'action') {
-          // Lógica cíclica solicitada: Standby -> Entrar -> Salir
-          const actionOrder = {
-            [ActionType.ESPERAR]: 1,
-            [ActionType.NADA]: 1,
-            [ActionType.ENTRAR_AHORA]: 2,
-            [ActionType.SALIR]: 3,
-            [ActionType.MERCADO_CERRADO]: 4,
-            [ActionType.NOTICIA]: 5
-          };
-          valA = actionOrder[analysisA?.action || ActionType.NADA];
-          valB = actionOrder[analysisB?.action || ActionType.NADA];
-        } else if (key === 'symbol') { valA = a.symbol; valB = b.symbol; }
-        else if (key === 'price') { valA = analysisA?.price || 0; valB = analysisB?.price || 0; }
-        else if (key === 'score') { valA = analysisA?.powerScore || 0; valB = analysisB?.powerScore || 0; }
-        else if (key === 'signal') { valA = analysisA?.mainSignal || ''; valB = analysisB?.mainSignal || ''; }
-        
-        if (valA < valB) return direction === 'asc' ? -1 : 1;
-        if (valA > valB) return direction === 'asc' ? 1 : -1;
-      }
-
-      // Default sort by score (De mayor a menor)
       const scoreA = analysisA?.powerScore || 0;
       const scoreB = analysisB?.powerScore || 0;
-      if (scoreB !== scoreA) return scoreB - scoreA; // Primero el que tenga más score
 
-      // Si el score es igual, ponemos las entradas primero
-      const isEntryA = analysisA?.action === ActionType.ENTRAR_AHORA;
-      const isEntryB = analysisB?.action === ActionType.ENTRAR_AHORA;
-      if (isEntryA && !isEntryB) return -1;
-      if (!isEntryA && isEntryB) return 1;
+      // 1. PRIORIDAD QUIRÚRGICA: Señales de entrada (+85) arriba de todo
+      const isHotA = analysisA?.action === ActionType.ENTRAR_AHORA && scoreA >= 85;
+      const isHotB = analysisB?.action === ActionType.ENTRAR_AHORA && scoreB >= 85;
       
+      if (isHotA && !isHotB) return -1;
+      if (!isHotA && isHotB) return 1;
+
+      // 2. SEGUNDA PRIORIDAD: Por Score de mayor a menor
+      if (scoreB !== scoreA) return scoreB - scoreA;
       return 0;
     });
-  }, [filter, actionFilter, searchQuery, sortConfig, refreshTrigger]);
+  }, [filter, searchQuery, refreshTrigger]);
 
   return (
     <div className="min-h-screen pb-24 bg-[#050505] text-white selection:bg-emerald-500/30">
