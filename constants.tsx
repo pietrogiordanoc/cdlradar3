@@ -1,11 +1,10 @@
-
 import { Instrument } from './types';
 
-// La API_KEY ya no es necesaria aquí porque el servidor la maneja internamente
-export const FMP_API_KEY = 'GYltwxEyGgaAnA4LvrRLtOGS1S8qv2wN'; 
-export const REFRESH_INTERVAL_MS = 300000; // 5 minutes
+// Configuración Global
+export const REFRESH_INTERVAL_MS = 300000; // 5 minutos
 
 export const INSTRUMENT_NAMES: Record<string, string> = {
+  // --- FOREX ---
   "EUR/USD": "Euro / US Dollar",
   "USD/JPY": "US Dollar / Japanese Yen",
   "GBP/USD": "British Pound / US Dollar",
@@ -20,6 +19,52 @@ export const INSTRUMENT_NAMES: Record<string, string> = {
   "AUD/JPY": "Australian Dollar / Japanese Yen",
   "EUR/CHF": "Euro / Swiss Franc",
   "USD/MXN": "US Dollar / Mexican Peso",
+
+  // --- INDICES ---
+  "SPX": "S&P 500 Index",
+  "IXIC": "Nasdaq Composite",
+  "DJI": "Dow Jones Industrial",
+  "NDX": "Nasdaq 100 Index",
+  "N225": "Nikkei 225 (Japan)",
+  "HSI": "Hang Seng Index (HK)",
+  "KS11": "KOSPI (South Korea)",
+  "FTSE": "FTSE 100 (London)",
+  "BVSP": "IBOVESPA (Brazil)",
+  "DAX": "DAX 40 (Germany)",
+  "CAC": "CAC 40 (France)",
+  "STOXX50E": "EURO STOXX 50",
+  "SSEC": "Shanghai Composite",
+  "AXJO": "S&P/ASX 200 (Australia)",
+  "RUT": "Russell 2000 Index",
+
+  // --- STOCKS ---
+  "NVDA": "NVIDIA Corporation",
+  "MSFT": "Microsoft Corp",
+  "GOOGL": "Alphabet Inc (Google)",
+  "AMZN": "Amazon.com Inc",
+  "TSM": "Taiwan Semiconductor",
+  "META": "Meta Platforms Inc",
+  "AVGO": "Broadcom Inc",
+  "LRCX": "Lam Research Corp",
+  "KLAC": "KLA Corporation",
+  "NFLX": "Netflix Inc",
+  "V": "Visa Inc",
+  "MU": "Micron Technology",
+  "AAPL": "Apple Inc",
+  "TSLA": "Tesla Inc",
+  "ORCL": "Oracle Corporation",
+  "ASML": "ASML Holding NV",
+  "AMD": "Advanced Micro Devices",
+  "LLY": "Eli Lilly and Company",
+
+  // --- COMMODITIES ---
+  "XAU/USD": "Gold Spot / US Dollar",
+  "XAG/USD": "Silver Spot / US Dollar",
+  "WTI": "Crude Oil WTI",
+  "CC": "Cocoa Futures",
+  "KC": "Coffee Futures",
+
+  // --- CRYPTO ---
   "BTC/USD": "Bitcoin / US Dollar",
   "ETH/USD": "Ethereum / US Dollar",
   "SOL/USD": "Solana / US Dollar",
@@ -27,18 +72,7 @@ export const INSTRUMENT_NAMES: Record<string, string> = {
   "XRP/USD": "Ripple / US Dollar",
   "ADA/USD": "Cardano / US Dollar",
   "DOT/USD": "Polkadot / US Dollar",
-  "LINK/USD": "Chainlink / US Dollar",
-  "XAU/USD": "Gold / US Dollar",
-  "XAG/USD": "Silver / US Dollar",
-  "WTI": "Crude Oil WTI",
-  "SPX": "S&P 500 Index",
-  "IXIC": "Nasdaq Composite",
-  "DJI": "Dow Jones Industrial",
-  "NVDA": "NVIDIA Corp",
-  "AAPL": "Apple Inc",
-  "TSLA": "Tesla Inc",
-  "MSFT": "Microsoft Corp",
-  "GOOGL": "Alphabet Inc"
+  "LINK/USD": "Chainlink / US Dollar"
 };
 
 export const INSTRUMENTS_DATA: Record<string, string[]> = {
@@ -74,5 +108,5 @@ export const TIMEFRAMES: { label: string, value: any }[] = [
   { label: '1H', value: '1h' },
   { label: '15M', value: '15min' },
   { label: '5M', value: '5min' },
-  { label: '30S', value: '30s' }
+  { label: '1M', value: '1min' } // Actualizado a 1 minuto para mayor compatibilidad
 ];
