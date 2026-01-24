@@ -6,6 +6,7 @@ const GlobalAnalysisCache: Record<string, { analysis: MultiTimeframeAnalysis, tr
 
 interface InstrumentRowProps {
   instrument: Instrument;
+  index: number;
   globalRefreshTrigger: number;
   strategy: Strategy;
   onAnalysisUpdate?: (id: string, data: MultiTimeframeAnalysis | null) => void;
@@ -14,13 +15,24 @@ interface InstrumentRowProps {
 }
 
 const InstrumentRow: React.FC<InstrumentRowProps> = ({ 
-  instrument, globalRefreshTrigger, strategy, onAnalysisUpdate, onOpenChart, isChartOpen
+  instrument, index, globalRefreshTrigger, strategy, onAnalysisUpdate, onOpenChart, isChartOpen
 }) => {
   const [isFresh, setIsFresh] = useState(false);
-  const [analysis, setAnalysis] = useState<MultiTimeframeAnalysis | null>(() => GlobalAnalysisCache[instrument.id]?.analysis || null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPrice, setCurrentPrice] = useState<number>(0);
   
+  // EFECTO BOOM: Leer de caché o localStorage al arrancar (Carga instantánea)
+  const [analysis, setAnalysis] = useState<MultiTimeframeAnalysis | null>(() => {
+    if (GlobalAnalysisCache[instrument.id]) return GlobalAnalysisCache[instrument.id].analysis;
+    const saved = localStorage.getItem(`last_analysis_${instrument.id}`);
+    if (saved) {
+      const cached = JSON.parse(saved);
+      const diezMinutos = 10 * 60 * 1000;
+      if (Date.now() - cached.timestamp < diezMinutos) return cached.analysis;
+    }
+    return null;
+  });
+
   const [tradeData, setTradeData] = useState<{type: number, entry: number}>(() => {
     const saved = localStorage.getItem(`trade_data_${instrument.id}`);
     return saved ? JSON.parse(saved) : { type: 0, entry: 0 };
@@ -47,7 +59,6 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // RESTAURACIÓN QUIRÚRGICA: 5000 velas como estaba originalmente
       const data5m = await fetchTimeSeries(instrument.symbol, '5min', 5000); 
       if (data5m.length >= 100) {
         const combinedData = {
@@ -57,7 +68,6 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
           '4h': resampleCandles(data5m, 48)
         };
         
-        // LA LÓGICA DE LA ESTRATEGIA NO SE TOCA UN SOLO PIXEL
         const result = strategy.analyze(instrument.symbol, combinedData as any, false, instrument);
         
         if (result.action !== lastActionRef.current) {
@@ -70,19 +80,39 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
 
         lastActionRef.current = result.action;
         setAnalysis(result);
+        
+        // Guardar en caché y disco (Persistencia)
         GlobalAnalysisCache[instrument.id] = { analysis: result, trigger: globalRefreshTrigger };
+        localStorage.setItem(`last_analysis_${instrument.id}`, JSON.stringify({
+          analysis: result, timestamp: Date.now()
+        }));
+
         if (onAnalysisUpdate) onAnalysisUpdate(instrument.id, result);
       }
     } catch (e) {
+      console.error("Analysis Error:", e);
     } finally { setIsLoading(false); }
-  }, [instrument, strategy, globalRefreshTrigger, playAlertSound, onAnalysisUpdate]);
+  }, [instrument, strategy, globalRefreshTrigger, playAlertSound, onAnalysisUpdate, isLoading]);
 
   useEffect(() => {
     if (globalRefreshTrigger !== lastRefreshTriggerRef.current) {
+      const isFirstLoad = lastRefreshTriggerRef.current === -1;
       lastRefreshTriggerRef.current = globalRefreshTrigger;
-      performAnalysis();
+      
+      // JITTER + STAGGER: Desincronización para 1000 usuarios
+      const randomOffset = Math.random() * 5000;
+      // SI ES LA PRIMERA CARGA (Efecto BOOM): 50ms por fila.
+      // El radar estalla de información en 3 segundos.
+      // SI ES REFRESCO DE RUTINA: 2000ms + Jitter.
+      // Esto mantiene el "goteo" rítmico para no saturar nunca.
+      const staggerDelay = isFirstLoad ? (index * 50) : (index * 2000 + randomOffset);
+      
+      const timer = setTimeout(() => {
+        performAnalysis();
+      }, staggerDelay);
+      return () => clearTimeout(timer);
     }
-  }, [globalRefreshTrigger, performAnalysis]);
+  }, [globalRefreshTrigger, performAnalysis, index]);
 
   useEffect(() => {
     const rawPrice = PriceStore[instrument.symbol] || analysis?.price;
@@ -116,14 +146,10 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
   const getActionColor = (action?: ActionType, score: number = 0, mainSignal?: SignalType) => {
     if (isLoading) return 'text-neutral-700 border-white/5';
     if (action === ActionType.MERCADO_CERRADO) return 'text-neutral-500 bg-black/40 border-neutral-800/50';
-    // SI ES ENTRADA FUERTE
     if (action === ActionType.ENTRAR_AHORA && score >= 85) {
-      // SI ES VENTA -> ROJO + PARPADEO
-      if (mainSignal === SignalType.SALE) {
-        return 'text-rose-400 bg-rose-500/20 border-rose-400 shadow-[0_0_25px_rgba(244,63,94,0.4)] precision-alert-blink font-black ring-1 ring-rose-500/50';
-      }
-      // SI ES COMPRA -> VERDE + PARPADEO
-      return 'text-emerald-400 bg-emerald-500/20 border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.4)] precision-alert-blink font-black ring-1 ring-emerald-500/50';
+      return mainSignal === SignalType.SALE 
+        ? 'text-rose-400 bg-rose-500/20 border-rose-400 shadow-[0_0_25px_rgba(244,63,94,0.4)] precision-alert-blink font-black ring-1 ring-rose-500/50'
+        : 'text-emerald-400 bg-emerald-500/20 border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.4)] precision-alert-blink font-black ring-1 ring-emerald-500/50';
     }
     switch(action) {
       case ActionType.SALIR: return 'text-rose-400 bg-rose-500/20 border-rose-400 precision-alert-blink';
@@ -146,12 +172,9 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
             <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden bg-[#0a0b0e] border border-white/5 flex items-center justify-center">
               {(() => {
                 const sym = instrument.symbol.toUpperCase().replace('/', '');
-                if (sym.includes('XAU')) return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#FFB100"><path d="M2 22h20v-2H2v2zm3-4h6v-2H5v2zm8 0h6v-2h-6v2zM2 16h9v-2H2v2zm11 0h9v-2h-9v2z"/></svg>;
-                if (sym.includes('XAG')) return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#A6A9B6"><path d="M2 22h20v-2H2v2zm3-4h6v-2H5v2zm8 0h6v-2h-6v2zM2 16h9v-2H2v2zm11 0h9v-2h-9v2z"/></svg>;
-                if (sym.includes('OIL') || sym.includes('WTI')) return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#000"><path d="M12 2.25L6.44 7.64c-2.14 2.14-3.19 4.96-3.19 7.76 0 4.8 3.84 8.7 8.75 8.7s8.75-3.9 8.75-8.7c0-2.8-1.05-5.62-3.19-7.76l-4.92-5.11z" stroke="#fff" strokeWidth="0.5"/></svg>;
-                if (sym.includes('500') || sym.includes('SPX')) return <div className="w-full h-full bg-[#FF0000] flex items-center justify-center text-[10px] font-bold text-white">500</div>;
-                if (sym.includes('30') || sym.includes('DJI')) return <div className="w-full h-full bg-[#0052FF] flex items-center justify-center text-[10px] font-bold text-white">30</div>;
-                if (sym.includes('100') || sym.includes('NDX')) return <div className="w-full h-full bg-[#00BCD4] flex items-center justify-center text-[10px] font-bold text-white">100</div>;
+                if (sym.includes('XAU')) return <span className="text-lg">🟡</span>;
+                if (sym.includes('XAG')) return <span className="text-lg">⚪</span>;
+                if (sym.includes('OIL') || sym.includes('WTI')) return <span className="text-lg">🛢️</span>;
                 if (instrument.type === 'forex' && instrument.symbol.includes('/')) {
                   const pts = instrument.symbol.split('/');
                   return <div className="flex -space-x-2">
@@ -166,21 +189,19 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                     <span className="font-mono font-bold text-white text-lg tracking-tight">{instrument.symbol}</span>
-                    {/* --- RESTAURACIÓN QUIRÚRGICA: ETIQUETA NOW --- */}
                     {isFresh && (
                       <span className="px-1.5 py-0.5 rounded bg-sky-500 text-black text-[9px] font-black animate-pulse shadow-[0_0_10px_rgba(14,165,233,0.5)]">
                         NOW
                       </span>
                     )}
-                    {/* Botón de Gráfico (Mantenido celeste si está abierto) */}
                     <button 
                       onClick={() => onOpenChart?.(instrument.symbol)} 
-                      className={`p-1.5 rounded-lg transition-colors duration-300 border flex items-center justify-center ${isChartOpen ? 'bg-sky-500/20 border-sky-500/50 text-sky-400' : 'bg-white/5 border-white/5 text-neutral-500 hover:text-sky-400'}`}
+                      className={`p-1.5 rounded-lg transition-colors duration-300 border flex items-center justify-center ${isChartOpen ? 'bg-sky-500/20 border-sky-500 text-sky-400' : 'bg-white/5 border-white/5 text-neutral-500 hover:text-sky-400'}`}
                     >📈</button>
                   </div>
                 {currentPrice > 0 && <span className="text-[14px] font-mono text-white font-black">{currentPrice < 2 ? currentPrice.toFixed(4) : currentPrice.toFixed(2)}</span>}
               </div>
-              <span className="text-[9px] text-neutral-500 uppercase mt-0.5">{instrument.name}</span>
+              <span className="text-[18px] text-neutral-500 uppercase mt-0.5">{instrument.name}</span>
             </div>
           </div>
         </div>
@@ -193,8 +214,8 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
             </div>
           ))}
         </div>
-        <div className="w-1/6 text-center">
-          <span className={`text-xl font-black font-mono ${analysis?.powerScore && analysis.powerScore >= 85 ? 'text-emerald-400' : 'text-neutral-500'}`}>{analysis?.powerScore || 0}</span>
+        <div className="w-1/6 text-center text-xl font-black font-mono">
+          {analysis?.powerScore || 0}
         </div>
         <div className="w-40 text-center text-[10px] font-bold text-neutral-500 uppercase">{isMarketOpen(instrument.type, instrument.symbol) ? 'Abierto' : 'Cerrado'}</div>
         <div className={`px-4 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest min-w-[140px] text-center ${getActionColor(analysis?.action, analysis?.powerScore, analysis?.mainSignal)}`}>
@@ -203,32 +224,10 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
 
         <div className="w-[200px] flex items-center justify-end pl-4 border-l border-white/5 space-x-3">
           {tradeData.type !== 0 && (
-            <>
-              <div className={`text-[11px] font-black font-mono px-2 py-0.5 rounded ${pnl && pnl >= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`}>{pnl?.toFixed(2)}%</div>
-              {/* --- BLOQUE DE PRECIOS CON PRECISIÓN TOTAL --- */}
-              <div className="flex flex-col items-end leading-none space-y-1">
-                {/* Precio de Entrada */}
-                <span className="text-[9px] text-white font-bold">
-                  In: ${tradeData.entry < 2 
-                    ? tradeData.entry.toFixed(4) 
-                    : tradeData.entry.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                {/* Precio Take Profit (1%) */}
-                <span className="text-[8px] text-emerald-500/50 font-bold">
-                  TP: ${(() => {
-                    const tpValue = tradeData.type === 1 ? tradeData.entry * 1.01 : tradeData.entry * 0.99;
-                    return tradeData.entry < 2 
-                      ? tpValue.toFixed(4) 
-                      : tpValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                  })()}
-                </span>
-              </div>
-            </>
+            <div className={`text-[11px] font-black font-mono px-2 py-0.5 rounded ${pnl && pnl >= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`}>{pnl?.toFixed(2)}%</div>
           )}
           <button onClick={cycleTradeMarker} className={`w-12 h-12 rounded-2xl border-2 transition-all flex items-center justify-center ${tradeData.type === 1 ? 'bg-emerald-500 border-emerald-400 text-black' : tradeData.type === 2 ? 'bg-rose-500 border-rose-400 text-black' : 'bg-white/5 text-neutral-800'}`}>
-            {tradeData.type === 0 ? <svg className="w-5 h-5 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M12 4.5v15m7.5-7.5h-15" /></svg> : 
-             tradeData.type === 1 ? <svg className="w-8 h-8 animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z" /></svg> : 
-                                    <svg className="w-8 h-8 animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l8-8h-5v-8h-6v8h-5z" /></svg>}
+            {tradeData.type === 0 ? '➕' : tradeData.type === 1 ? '▲' : '▼'}
           </button>
         </div>
       </div>
