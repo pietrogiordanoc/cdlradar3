@@ -201,7 +201,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
                   </div>
                 {currentPrice > 0 && <span className="text-[14px] font-mono text-white font-black">{currentPrice < 2 ? currentPrice.toFixed(4) : currentPrice.toFixed(2)}</span>}
               </div>
-              <span className="text-[18px] text-neutral-500 uppercase mt-0.5">{instrument.name}</span>
+              <span className="text-[14px] text-neutral-500 uppercase mt-0.5">{instrument.name}</span>
             </div>
           </div>
         </div>
