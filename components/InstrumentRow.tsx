@@ -33,18 +33,9 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
     return null;
   });
 
-  const [tradeData, setTradeData] = useState<{type: number, entry: number, tp: number}>(() => {
+  const [tradeData, setTradeData] = useState<{type: number, entry: number}>(() => {
     const saved = localStorage.getItem(`trade_data_${instrument.id}`);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Forzamos que entry y tp sean números siempre, si no existen ponemos 0
-      return {
-        type: parsed.type || 0,
-        entry: Number(parsed.entry) || 0,
-        tp: Number(parsed.tp) || 0
-      };
-    }
-    return { type: 0, entry: 0, tp: 0 };
+    return saved ? JSON.parse(saved) : { type: 0, entry: 0 };
   });
 
   const lastActionRef = useRef<ActionType | null>(null);
@@ -76,16 +67,9 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
           '1h': resampleCandles(data5m, 12), 
           '4h': resampleCandles(data5m, 48)
         };
-
+        
         const result = strategy.analyze(instrument.symbol, combinedData as any, false, instrument);
-
-        // --- BLOQUE QUIRÚRGICO: CÁLCULO DE VOLATILIDAD (PILAR 2) ---
-        const last20 = data5m.slice(0, 20);
-        const atr = last20.reduce((acc, c) => acc + (Math.abs(c.h - c.l)), 0) / 20;
-        // Multiplicador sugerido por Smart Money: 1.5x el rango promedio
-        result.atrTarget = atr * 1.5; 
-        // ---------------------------------------------------------
-
+        
         if (result.action !== lastActionRef.current) {
           if (result.action === ActionType.ENTRAR_AHORA && result.powerScore >= 85) {
             playAlertSound('entry'); setIsFresh(true);
@@ -96,7 +80,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
 
         lastActionRef.current = result.action;
         setAnalysis(result);
-
+        
         // Guardar en caché y disco (Persistencia)
         GlobalAnalysisCache[instrument.id] = { analysis: result, trigger: globalRefreshTrigger };
         localStorage.setItem(`last_analysis_${instrument.id}`, JSON.stringify({
@@ -150,18 +134,8 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
   const cycleTradeMarker = (e: React.MouseEvent) => {
     e.stopPropagation();
     setTradeData(prev => {
-      const nextType = (prev.type + 1) % 3; // 0: off, 1: Compra, 2: Venta
-      let entry = 0;
-      let tp = 0;
-
-      if (nextType !== 0) {
-        entry = currentPrice || 0;
-        // Si el análisis tiene ATR lo usamos, si no, usamos un fallback del 0.5%
-        const volatility = analysis?.atrTarget || (entry * 0.005);
-        tp = nextType === 1 ? (entry + volatility) : (entry - volatility);
-      }
-
-      const newData = { type: nextType, entry, tp };
+      const nextType = (prev.type + 1) % 3;
+      const newData = { type: nextType, entry: nextType !== 0 ? (currentPrice || 0) : 0 };
       localStorage.setItem(`trade_data_${instrument.id}`, JSON.stringify(newData));
       return newData;
     });
@@ -250,31 +224,9 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
 
         <div className="w-[200px] flex items-center justify-end pl-4 border-l border-white/5 space-x-3">
           {tradeData.type !== 0 && (
-            <div className="flex flex-col items-end mr-2">
-              <div className="flex gap-2 text-[8px] font-bold font-mono text-neutral-500 uppercase tracking-tighter">
-                {/* Usamos || 0 y || 2 para que nunca falle */}
-                <span>IN: {(tradeData.entry || 0).toFixed(instrument.precision || 2)}</span>
-                <span className="text-sky-400/80">TP: {(tradeData.tp || 0).toFixed(instrument.precision || 2)}</span>
-              </div>
-
-              <div className={`text-[11px] font-black font-mono px-2 py-0.5 rounded mt-1 border ${
-                (pnl || 0) >= 0 
-                  ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
-                  : 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-              }`}>
-                {(pnl || 0) >= 0 ? '▲' : '▼'} {Math.abs(pnl || 0).toFixed(2)}%
-              </div>
-            </div>
+            <div className={`text-[11px] font-black font-mono px-2 py-0.5 rounded ${pnl && pnl >= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`}>{pnl?.toFixed(2)}%</div>
           )}
-
-          <button 
-            onClick={cycleTradeMarker} 
-            className={`w-12 h-12 rounded-2xl border-2 transition-all flex items-center justify-center active:scale-90 ${
-              tradeData.type === 1 ? 'bg-emerald-500 border-emerald-400 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 
-              tradeData.type === 2 ? 'bg-rose-500 border-rose-400 text-black shadow-[0_0_15px_rgba(244,63,94,0.4)]' : 
-              'bg-white/5 text-neutral-800'
-            }`}
-          >
+          <button onClick={cycleTradeMarker} className={`w-12 h-12 rounded-2xl border-2 transition-all flex items-center justify-center ${tradeData.type === 1 ? 'bg-emerald-500 border-emerald-400 text-black' : tradeData.type === 2 ? 'bg-rose-500 border-rose-400 text-black' : 'bg-white/5 text-neutral-800'}`}>
             {tradeData.type === 0 ? '➕' : tradeData.type === 1 ? '▲' : '▼'}
           </button>
         </div>
