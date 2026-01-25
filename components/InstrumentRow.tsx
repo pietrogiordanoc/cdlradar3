@@ -33,9 +33,18 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
     return null;
   });
 
-  const [tradeData, setTradeData] = useState<{type: number, entry: number}>(() => {
+  const [tradeData, setTradeData] = useState<{type: number, entry: number, tp: number}>(() => {
     const saved = localStorage.getItem(`trade_data_${instrument.id}`);
-    return saved ? JSON.parse(saved) : { type: 0, entry: 0 };
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Forzamos que entry y tp sean números siempre, si no existen ponemos 0
+      return {
+        type: parsed.type || 0,
+        entry: Number(parsed.entry) || 0,
+        tp: Number(parsed.tp) || 0
+      };
+    }
+    return { type: 0, entry: 0, tp: 0 };
   });
 
   const lastActionRef = useRef<ActionType | null>(null);
@@ -242,19 +251,18 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         <div className="w-[200px] flex items-center justify-end pl-4 border-l border-white/5 space-x-3">
           {tradeData.type !== 0 && (
             <div className="flex flex-col items-end mr-2">
-              {/* Datos de la Confluencia (SMC/ATR) */}
               <div className="flex gap-2 text-[8px] font-bold font-mono text-neutral-500 uppercase tracking-tighter">
-                <span>IN: {tradeData.entry.toFixed(instrument.precision)}</span>
-                <span className="text-sky-400/80">TP: {tradeData.tp.toFixed(instrument.precision)}</span>
+                {/* Usamos || 0 y || 2 para que nunca falle */}
+                <span>IN: {(tradeData.entry || 0).toFixed(instrument.precision || 2)}</span>
+                <span className="text-sky-400/80">TP: {(tradeData.tp || 0).toFixed(instrument.precision || 2)}</span>
               </div>
 
-              {/* Burbuja de PnL: Verde si ganas, Rojo si pierdes (Dirección-aware) */}
               <div className={`text-[11px] font-black font-mono px-2 py-0.5 rounded mt-1 border ${
-                pnl && pnl >= 0 
+                (pnl || 0) >= 0 
                   ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
                   : 'text-rose-400 bg-rose-500/10 border-rose-500/20'
               }`}>
-                {pnl && pnl >= 0 ? '▲' : '▼'} {Math.abs(pnl || 0).toFixed(2)}%
+                {(pnl || 0) >= 0 ? '▲' : '▼'} {Math.abs(pnl || 0).toFixed(2)}%
               </div>
             </div>
           )}
