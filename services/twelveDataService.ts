@@ -1,71 +1,45 @@
 
-// 1. PON TU LLAVE AQUÍ (Búscala en tus correos o en TwelveData)
-const TWELVE_DATA_API_KEY = "93f4a098dc4649c0aeb152ec9e3473da";
-
 import { Candlestick, Timeframe } from '../types';
 
 export const PriceStore: Record<string, number> = {};
 
-export const fetchTimeSeries = async (symbol: string, interval: Timeframe, outputSize: number = 5000): Promise<Candlestick[]> => {
+export const fetchTimeSeries = async (symbol: string, interval: string): Promise<Candlestick[]> => {
   try {
-    // CAMBIO QUIRÚRGICO: Llamada directa a TwelveData para que funcione en Netlify
-    const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${interval}&outputsize=${outputSize}&apikey=${TWELVE_DATA_API_KEY}`;
+    // IMPORTANTE: Limpiamos el símbolo antes de enviarlo al proxy
+    const cleanSymbol = symbol.trim();
+    const url = `/api/proxy?symbol=${encodeURIComponent(cleanSymbol)}`;
     
     const response = await fetch(url);
+    if (!response.ok) return [];
+    
     const data = await response.json();
     
-    if (data.status === 'error') {
-      console.warn(`Error TwelveData (${symbol}):`, data.message);
-      return [];
-    }
+    // Accedemos a las velas (soportando formato objeto o formato array directo)
+    const rawCandles = data.values || (Array.isArray(data) ? data : []);
+
+    if (rawCandles.length === 0) return [];
     
-    if (!data.values || data.values.length === 0) return [];
-    
-    const candles = data.values.map((v: any) => ({
+    const candles = rawCandles.map((v: any) => ({
       datetime: v.datetime,
-      open: parseFloat(v.open),
-      high: parseFloat(v.high),
-      low: parseFloat(v.low),
-      close: parseFloat(v.close),
-      volume: parseInt(v.volume) || 0
+      open: parseFloat(v.open || 0),
+      high: parseFloat(v.high || 0),
+      low: parseFloat(v.low || 0),
+      close: parseFloat(v.close || 0),
+      volume: parseInt(v.volume || 0)
     })).reverse();
 
+    // Actualizamos el almacén de precios con el último cierre
     if (candles.length > 0) {
       PriceStore[symbol] = candles[candles.length - 1].close;
     }
 
     return candles;
   } catch (error) { 
-    console.error("Fetch error:", error);
     return []; 
   }
 };
 
-export const fetchCryptoPrice = async (symbol: string) => {
-  try {
-    const cryptoIdMap: Record<string, string> = {
-      'BTC/USD': 'bitcoin',
-      'ETH/USD': 'ethereum',
-      'SOL/USD': 'solana',
-      'BNB/USD': 'binancecoin',
-      'XRP/USD': 'ripple',
-      'ADA/USD': 'cardano',
-      'DOT/USD': 'polkadot',
-      'LINK/USD': 'chainlink'
-    };
-    
-    const id = cryptoIdMap[symbol];
-    if (!id) return;
-
-    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`);
-    const data = await res.json();
-    if (data[id]) {
-      PriceStore[symbol] = data[id].usd;
-    }
-  } catch (e) {
-    console.error("CoinGecko error:", e);
-  }
-};
+// fetchCryptoPrice eliminado. Solo se usa el proxy ahora.
 
 export const resampleCandles = (candles: Candlestick[], factor: number): Candlestick[] => {
   const resampled: Candlestick[] = [];

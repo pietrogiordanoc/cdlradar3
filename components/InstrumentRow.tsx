@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Instrument, MultiTimeframeAnalysis, SignalType, ActionType, Timeframe, Strategy, Candlestick } from '../types';
-import { fetchTimeSeries, PriceStore, resampleCandles, isMarketOpen } from '../services/twelveDataService';
+import { fetchTimeSeries, PriceStore, resampleCandles, isMarketOpen } from '../services/marketDataService';
 
 const GlobalAnalysisCache: Record<string, { analysis: MultiTimeframeAnalysis, trigger: number }> = {};
 
@@ -98,15 +98,8 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
     if (globalRefreshTrigger !== lastRefreshTriggerRef.current) {
       const isFirstLoad = lastRefreshTriggerRef.current === -1;
       lastRefreshTriggerRef.current = globalRefreshTrigger;
-      
-      // JITTER + STAGGER: Desincronización para 1000 usuarios
-      const randomOffset = Math.random() * 5000;
-      // SI ES LA PRIMERA CARGA (Efecto BOOM): 50ms por fila.
-      // El radar estalla de información en 3 segundos.
-      // SI ES REFRESCO DE RUTINA: 2000ms + Jitter.
-      // Esto mantiene el "goteo" rítmico para no saturar nunca.
-      const staggerDelay = isFirstLoad ? (index * 50) : (index * 2000 + randomOffset);
-      
+      // Delay mínimo: Supabase aguanta carga simultánea
+      const staggerDelay = isFirstLoad ? (index * 25) : (index * 10);
       const timer = setTimeout(() => {
         performAnalysis();
       }, staggerDelay);

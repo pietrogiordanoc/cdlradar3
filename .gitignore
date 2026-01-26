@@ -29,3 +29,6 @@ yarn-error.log*
 # Sistema
 .DS_Store
 thumbs.db
+
+# Local Netlify folder
+.netlify

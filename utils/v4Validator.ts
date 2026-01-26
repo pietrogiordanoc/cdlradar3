@@ -1,7 +1,7 @@
 
 import { Candlestick, SignalType, ActionType, Timeframe, Instrument } from '../types';
 import { calculateSMA, calculateATR, calculateEMA, calculateSlope } from './indicators';
-import { isMarketOpen } from '../services/twelveDataService';
+import { isMarketOpen } from '../services/marketDataService';
 
 export const validateV4Signal = (
   data: Partial<Record<Timeframe, Candlestick[]>>,

@@ -3,7 +3,6 @@ import { ALL_INSTRUMENTS, REFRESH_INTERVAL_MS } from './constants.tsx';
 import { STRATEGIES } from './utils/tradingLogic';
 import { MultiTimeframeAnalysis, ActionType } from './types';
 import InstrumentRow from './components/InstrumentRow';
-import TimerDonut from './components/TimerDonut';
 import TradingViewModal from './components/TradingViewModal';
 
 type SortConfig = { key: 'symbol' | 'action' | 'signal' | 'price' | 'score'; direction: 'asc' | 'desc' } | null;
@@ -11,6 +10,14 @@ type ActionFilter = 'all' | 'entrar' | 'salir' | 'esperar';
 
 const App: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  // HEARTBEAT AUTOMÁTICO: Refresco cada 5 minutos (sincronizado con velas de 5min)
+  useEffect(() => {
+    const heartbeat = setInterval(() => {
+      setRefreshTrigger(t => t + 1);
+    }, 300000); // 5 minutos = 300,000ms
+    return () => clearInterval(heartbeat);
+  }, []);
+  
   const [filter, setFilter] = useState<'all' | 'forex' | 'indices' | 'stocks' | 'commodities' | 'crypto'>('all');
   const [actionFilter, setActionFilter] = useState<ActionFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -181,11 +188,21 @@ const App: React.FC = () => {
                 className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs font-mono focus:outline-none focus:border-emerald-500/50 w-40 transition-all"
               />
             </div>
-            <TimerDonut 
-              durationMs={REFRESH_INTERVAL_MS} 
-              onComplete={handleRefreshComplete} 
-              isPaused={false} 
-            />
+            {/* REEMPLAZO DEL RELOJ POR LIVE SYNC INDICATOR */}
+            <div className="flex items-center space-x-3 bg-emerald-500/5 px-4 py-2 rounded-xl border border-emerald-500/10">
+              <div className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em] leading-none">
+                  Live Sync
+                </span>
+                <span className="text-[7px] text-neutral-500 font-bold uppercase mt-1">
+                  Supabase Active
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -225,9 +242,10 @@ const App: React.FC = () => {
             <div className="w-10"></div>
           </div>
           
-          {filteredInstruments.map(instrument => (
+          {filteredInstruments.map((instrument, index) => (
             <InstrumentRow
               key={instrument.id}
+              index={index} // <--- Añadido para escalonamiento
               instrument={instrument}
               isConnected={true}
               onToggleConnect={() => {}}
