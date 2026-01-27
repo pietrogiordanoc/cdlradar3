@@ -10,6 +10,7 @@ type ActionFilter = 'all' | 'entrar' | 'salir' | 'esperar';
 
 const App: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [countdown, setCountdown] = useState(300000); // 5 minutos en ms
   
   // TRIGGER INICIAL + HEARTBEAT: Dispara al montar y cada 5 minutos
   useEffect(() => {
@@ -17,6 +18,17 @@ const App: React.FC = () => {
     const id = setInterval(() => setRefreshTrigger(t => t + 1), 300000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    setCountdown(300000); // Resetear a 5 minutos
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 0) return 300000;
+        return prev - 10; // Actualizar cada 10ms
+      });
+    }, 10);
+    return () => clearInterval(interval);
+  }, [refreshTrigger]);
   
   const [filter, setFilter] = useState<'all' | 'forex' | 'indices' | 'stocks' | 'commodities' | 'crypto'>('all');
   const [actionFilter, setActionFilter] = useState<ActionFilter>('all');
@@ -123,6 +135,14 @@ const App: React.FC = () => {
     });
   }, [filter, searchQuery, refreshTrigger, sortConfig]);
 
+  const formatCountdown = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const milliseconds = Math.floor((ms % 1000) / 10);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="min-h-screen pb-24 bg-[#050505] text-white selection:bg-emerald-500/30">
       <header className="sticky top-0 z-50 bg-[#050505]/95 backdrop-blur-2xl border-b border-white/5 px-8 py-5">
@@ -211,6 +231,9 @@ const App: React.FC = () => {
                 </span>
                 <span className="text-[7px] text-neutral-500 font-bold uppercase mt-1">
                   Supabase Active
+                </span>
+                <span className="text-[7px] text-emerald-400 font-mono font-bold uppercase mt-0.5">
+                  {formatCountdown(countdown)}
                 </span>
               </div>
             </div>
