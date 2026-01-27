@@ -99,18 +99,29 @@ const App: React.FC = () => {
       const scoreA = analysisA?.powerScore || 0;
       const scoreB = analysisB?.powerScore || 0;
 
-      // 1. PRIORIDAD QUIRÚRGICA: Señales de entrada (+85) arriba de todo
+      // Si hay sortConfig manual, úsalo
+      if (sortConfig) {
+        if (sortConfig.key === 'symbol') {
+          return sortConfig.direction === 'asc' 
+            ? a.symbol.localeCompare(b.symbol)
+            : b.symbol.localeCompare(a.symbol);
+        }
+        if (sortConfig.key === 'score') {
+          return sortConfig.direction === 'asc' ? scoreA - scoreB : scoreB - scoreA;
+        }
+      }
+
+      // Orden automático por defecto (cada 5 min)
       const isHotA = analysisA?.action === ActionType.ENTRAR_AHORA && scoreA >= 85;
       const isHotB = analysisB?.action === ActionType.ENTRAR_AHORA && scoreB >= 85;
       
       if (isHotA && !isHotB) return -1;
       if (!isHotA && isHotB) return 1;
 
-      // 2. SEGUNDA PRIORIDAD: Por Score de mayor a menor
       if (scoreB !== scoreA) return scoreB - scoreA;
       return 0;
     });
-  }, [filter, searchQuery, refreshTrigger]);
+  }, [filter, searchQuery, refreshTrigger, sortConfig]);
 
   return (
     <div className="min-h-screen pb-24 bg-[#050505] text-white selection:bg-emerald-500/30">
