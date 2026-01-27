@@ -39,7 +39,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
   });
 
   const lastActionRef = useRef<ActionType | null>(null);
-  const lastRefreshTriggerRef = useRef<number>(GlobalAnalysisCache[instrument.id]?.trigger ?? -1);
+  const lastRefreshTriggerRef = useRef<number>(-1);
 
   const playAlertSound = useCallback((type: 'entry' | 'exit') => {
     try {
@@ -59,7 +59,9 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const data5m = await fetchTimeSeries(instrument.symbol, '5min'); 
+      const data5m = await fetchTimeSeries(instrument.symbol, '5min');
+      console.log(instrument.symbol, "5m candles:", data5m.length, "last dt:", data5m.at(-1)?.datetime);
+      
       if (data5m.length >= 100) {
         const combinedData = {
           '5min': data5m, 
@@ -69,6 +71,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         };
         
         const result = strategy.analyze(instrument.symbol, combinedData as any, false, instrument);
+        console.log(instrument.symbol, "signals:", result.signals, "score:", result.powerScore, "action:", result.action);
         
         if (result.action !== lastActionRef.current) {
           if (result.action === ActionType.ENTRAR_AHORA && result.powerScore >= 85) {

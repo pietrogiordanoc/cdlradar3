@@ -10,6 +10,12 @@ type ActionFilter = 'all' | 'entrar' | 'salir' | 'esperar';
 
 const App: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // TRIGGER INICIAL: Dispara análisis al montar
+  useEffect(() => {
+    setRefreshTrigger(1);
+  }, []);
+  
   // HEARTBEAT AUTOMÁTICO: Refresco cada 5 minutos (sincronizado con velas de 5min)
   useEffect(() => {
     const heartbeat = setInterval(() => {
