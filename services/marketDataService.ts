@@ -34,14 +34,16 @@ export const fetchTimeSeries = async (symbol: string, interval: string): Promise
 
 		if (rawValues.length === 0) return [];
     
-		const candles = rawValues.map((v: any) => ({
+	const candles = rawValues
+		.map((v: any) => ({
 			datetime: v.datetime,
 			open: parseFloat(v.open),
 			high: parseFloat(v.high),
 			low: parseFloat(v.low),
 			close: parseFloat(v.close),
 			volume: parseInt(v.volume) || 0
-		})).reverse();
+		}))
+		.sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
 
 		if (candles.length > 0) {
 			PriceStore[symbol] = candles[candles.length - 1].close;

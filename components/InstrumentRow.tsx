@@ -59,7 +59,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const data5m = await fetchTimeSeries(instrument.symbol, '5min', 5000); 
+      const data5m = await fetchTimeSeries(instrument.symbol, '5min'); 
       if (data5m.length >= 100) {
         const combinedData = {
           '5min': data5m, 
