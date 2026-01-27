@@ -56,6 +56,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
   }, []);
 
   const performAnalysis = useCallback(async () => {
+    console.log("[RADAR] performAnalysis RUN", instrument.symbol, Date.now());
     if (isLoading) return;
     setIsLoading(true);
     try {
@@ -86,6 +87,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
         
         // Guardar en caché y disco (Persistencia)
         GlobalAnalysisCache[instrument.id] = { analysis: result, trigger: globalRefreshTrigger };
+        console.log("[RADAR] saving analysis", instrument.id);
         localStorage.setItem(`last_analysis_${instrument.id}`, JSON.stringify({
           analysis: result, timestamp: Date.now()
         }));
