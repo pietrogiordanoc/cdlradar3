@@ -33,6 +33,7 @@ const App: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'forex' | 'indices' | 'stocks' | 'commodities' | 'crypto'>('all');
   const [actionFilter, setActionFilter] = useState<ActionFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
   const [volume, setVolume] = useState(0.5);
   const [isTestActive, setIsTestActive] = useState(false);
@@ -211,13 +212,27 @@ const App: React.FC = () => {
               </div>
             </div>
             <div className="relative">
-              <input 
-                type="text" 
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs font-mono focus:outline-none focus:border-emerald-500/50 w-40 transition-all"
-              />
+              <button 
+                onClick={() => setSearchOpen(!searchOpen)}
+                className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-500/30 transition-all"
+              >
+                <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+              
+              {searchOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-black/95 backdrop-blur-xl border border-white/10 rounded-xl p-3 shadow-2xl z-50">
+                  <input 
+                    type="text" 
+                    placeholder="Search instrument..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    autoFocus
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-emerald-500/50 text-white placeholder-neutral-500"
+                  />
+                </div>
+              )}
             </div>
             {/* REEMPLAZO DEL RELOJ POR LIVE SYNC INDICATOR */}
             <div className="flex items-center space-x-3 bg-emerald-500/5 px-4 py-2 rounded-xl border border-emerald-500/10">
@@ -232,7 +247,7 @@ const App: React.FC = () => {
                 <span className="text-[7px] text-neutral-500 font-bold uppercase mt-1">
                   Supabase Active
                 </span>
-                <span className="text-[7px] text-emerald-400 font-mono font-bold uppercase mt-0.5">
+                <span className="text-[9px] text-emerald-400 font-mono font-bold uppercase mt-0.5">
                   {formatCountdown(countdown)}
                 </span>
               </div>
