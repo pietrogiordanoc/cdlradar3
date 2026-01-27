@@ -9,7 +9,7 @@ export const analyzeSqzMom = (symbol: string, data: Partial<Record<Timeframe, Ca
   const multKC = 1.5;
 
   const calculateSqzSignal = (candles: Candlestick[] | undefined) => {
-    if (!candles || candles.length < 20) return SignalType.NEUTRAL;
+    if (!candles || candles.length < 3) return SignalType.NEUTRAL;
     const closes = candles.map(c => c.close);
     const highs = candles.map(c => c.high);
     const lows = candles.map(c => c.low);

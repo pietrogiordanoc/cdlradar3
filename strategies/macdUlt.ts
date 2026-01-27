@@ -9,7 +9,7 @@ export const analyzeMACDUlt = (symbol: string, data: Partial<Record<Timeframe, C
   const signalLength = 9;
 
   const calculateMACDSignal = (candles: Candlestick[] | undefined) => {
-    if (!candles || candles.length < 30) return SignalType.NEUTRAL;
+    if (!candles || candles.length < 3) return SignalType.NEUTRAL;
     const closes = candles.map(c => c.close);
     const macdSeries: number[] = [];
     for (let i = slowLength; i <= closes.length; i++) {
