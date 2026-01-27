@@ -11,17 +11,11 @@ type ActionFilter = 'all' | 'entrar' | 'salir' | 'esperar';
 const App: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   
-  // TRIGGER INICIAL: Dispara análisis al montar
+  // TRIGGER INICIAL + HEARTBEAT: Dispara al montar y cada 5 minutos
   useEffect(() => {
-    setRefreshTrigger(1);
-  }, []);
-  
-  // HEARTBEAT AUTOMÁTICO: Refresco cada 5 minutos (sincronizado con velas de 5min)
-  useEffect(() => {
-    const heartbeat = setInterval(() => {
-      setRefreshTrigger(t => t + 1);
-    }, 300000); // 5 minutos = 300,000ms
-    return () => clearInterval(heartbeat);
+    setRefreshTrigger(t => t + 1); // Dispara 1 vez al cargar
+    const id = setInterval(() => setRefreshTrigger(t => t + 1), 300000);
+    return () => clearInterval(id);
   }, []);
   
   const [filter, setFilter] = useState<'all' | 'forex' | 'indices' | 'stocks' | 'commodities' | 'crypto'>('all');

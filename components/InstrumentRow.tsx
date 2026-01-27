@@ -97,6 +97,15 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
     } finally { setIsLoading(false); }
   }, [instrument, strategy, globalRefreshTrigger, playAlertSound, onAnalysisUpdate, isLoading]);
 
+  // DISPARO AL MONTAR: Ejecuta análisis una vez al cargar (independiente del trigger)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      performAnalysis();
+    }, index * 25); // Stagger para evitar saturar Supabase
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (globalRefreshTrigger !== lastRefreshTriggerRef.current) {
       const isFirstLoad = lastRefreshTriggerRef.current === -1;
