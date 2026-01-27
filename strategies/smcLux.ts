@@ -4,7 +4,7 @@ import { detectFractalHigh, detectFractalLow } from '../utils/indicators';
 import { validateV4Signal } from '../utils/v4Validator';
 
 const detectSMCBias = (candles: Candlestick[] | undefined, swingLength: number = 5) => {
-  if (!candles || candles.length < 15) return { bias: 0 };
+  if (!candles || candles.length < 10) return { bias: 0 };
   let bias = 0; 
   let lastSwingHigh = candles[0].high;
   let lastSwingLow = candles[0].low;
