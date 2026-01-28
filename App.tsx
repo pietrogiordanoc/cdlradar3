@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { ALL_INSTRUMENTS, REFRESH_INTERVAL_MS } from './constants.tsx';
+import { ALL_INSTRUMENTS, REFRESH_INTERVAL_MS } from './constants';
 import { STRATEGIES } from './utils/tradingLogic';
 import { MultiTimeframeAnalysis, ActionType } from './types';
 import InstrumentRow from './components/InstrumentRow';
@@ -294,14 +294,11 @@ const App: React.FC = () => {
           {filteredInstruments.map((instrument, index) => (
             <InstrumentRow
               key={instrument.id}
-              index={index} // <--- Añadido para escalonamiento
+              index={index}
               instrument={instrument}
-              isConnected={true}
-              onToggleConnect={() => {}}
               globalRefreshTrigger={refreshTrigger}
               strategy={STRATEGIES[0]}
               onAnalysisUpdate={handleAnalysisUpdate}
-              isTestMode={false}
               onOpenChart={(symbol) => {
                 if (!openCharts.includes(symbol)) {
                   setOpenCharts(prev => [...prev, symbol]);
