@@ -61,6 +61,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
     setIsLoading(true);
     try {
       const data5m = await fetchTimeSeries(instrument.symbol, '5min');
+      console.log("🔴 PERFORMANCE ANALYSIS START", instrument.symbol, "data5m length:", data5m?.length);
       console.log(instrument.symbol, "5m candles:", data5m.length, "last dt:", data5m.at(-1)?.datetime);
       
       if (data5m.length >= 60) {
@@ -70,6 +71,12 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
           '1h': resampleCandles(data5m, 12), 
           '4h': resampleCandles(data5m, 48)
         };
+        console.log("🔴 COMBINED DATA", instrument.symbol, {
+          "5min": combinedData['5min']?.length,
+          "15min": combinedData['15min']?.length,
+          "1h": combinedData['1h']?.length,
+          "4h": combinedData['4h']?.length
+        });
         
         const result = strategy.analyze(instrument.symbol, combinedData as any, false, instrument);
         console.log(instrument.symbol, "signals:", result.signals, "score:", result.powerScore, "action:", result.action);
