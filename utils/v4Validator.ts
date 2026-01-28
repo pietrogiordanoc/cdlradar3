@@ -21,7 +21,7 @@ export const validateV4Signal = (
     return { action: ActionType.MERCADO_CERRADO, score: 0 };
   }
 
-  if (m5 === SignalType.NEUTRAL || candles5m.length < 30) {
+  if (m5 === SignalType.NEUTRAL || candles5m.length < 20) {
     return { action: ActionType.NADA, score: 0 };
   }
 

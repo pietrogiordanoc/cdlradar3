@@ -63,7 +63,7 @@ const InstrumentRow: React.FC<InstrumentRowProps> = ({
       const data5m = await fetchTimeSeries(instrument.symbol, '5min');
       console.log(instrument.symbol, "5m candles:", data5m.length, "last dt:", data5m.at(-1)?.datetime);
       
-      if (data5m.length >= 144) {
+      if (data5m.length >= 60) {
         const combinedData = {
           '5min': data5m, 
           '15min': resampleCandles(data5m, 3),
